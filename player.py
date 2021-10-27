@@ -12,7 +12,7 @@ class Paddle(pygame.sprite.Sprite):
     self.image = pygame.Surface([width, height],pygame.SRCALPHA)
     self.image.fill(BLACK)
     
-    # self.image.set_colorkey(BLACK)
+    # self.image.set_colorkey((150,0,0))
     pygame.draw.rect(self.image, color, [0, 0, width, height])
 
     for y in range(0, height, image.get_rect().size[1]):
@@ -28,43 +28,62 @@ class Paddle(pygame.sprite.Sprite):
     # print(angle) 
     self.width = width
     self.height = height
-    self.rect.x = (self.line.max_x + self.line.min_x)/2 - self.width*self.line.sin/2
-    self.rect.y = (self.line.max_y + self.line.min_y)/2 - self.width*abs(self.line.cos)/2
+    self.rect.x = (self.line.max_x + self.line.min_x)/2 - self.width*self.line.sin/3
+    self.rect.y = (self.line.max_y + self.line.min_y)/2 - self.width*self.line.cos/3
     # self.rect.x = (self.line.max_x + self.line.min_x)/2
     # self.rect.y = (self.line.max_y + self.line.min_y)/2
-    self.x = self.rect.x
+    self.x = (self.line.max_x + self.line.min_x)/2
+    self.y = 0
+
+    #correcting translation due to rotation
+    if(self.line.slope<0): 
+      self.rect.x -= self.height * abs(self.line.cos)
+
+    # self.x = self.rect.x
+
+
   def moveUp(self, pixels):
-    xx = self.x
-    yy = self.rect.y
     if self.line.c2[0] != self.line.c1[0]:
       # self.rect.x += self.width*self.line.sin/2
       self.x += pixels * self.line.cos
       self.rect.x = self.x
       c = self.line.c1[1] - self.line.slope*self.line.c1[0]
       y = self.line.slope * self.x + c
-
+      self.y = y
       self.rect.y = y
     else:
       self.rect.y -= pixels
+      self.y = self.rect.y
     
 
-    if self.rect.x < self.line.min_x:
-      self.rect.x = self.line.min_x
     if self.rect.y < self.line.min_y:
-      self.rect.y = self.line.min_y
-    
-    if self.rect.x > self.line.max_x-self.height*abs(self.line.cos):
-      self.rect.x = self.line.max_x-self.height*abs(self.line.cos)
+        self.rect.y = self.line.min_y
     if self.rect.y > self.line.max_y-self.height*self.line.sin:
-      self.rect.y = self.line.max_y-self.height*self.line.sin
+        self.rect.y = self.line.max_y-self.height*self.line.sin
 
-    self.rect.x -= self.width*self.line.sin/2
-    self.rect.y -= self.width*self.line.cos/2
+    if self.line.slope>=0:
+      if self.rect.x < self.line.min_x:
+        self.rect.x = self.line.min_x    
+      if self.rect.x > self.line.max_x-self.height*abs(self.line.cos):
+        self.rect.x = self.line.max_x-self.height*abs(self.line.cos)
+      
+    else:
+      if self.rect.x < self.line.min_x + self.height*abs(self.line.cos):
+        self.rect.x = self.line.min_x + self.height*abs(self.line.cos)    
+      if self.rect.x > self.line.max_x:
+        self.rect.x = self.line.max_x
+
+
+    self.rect.x -= self.width*self.line.sin/3
+    self.rect.y -= self.width*self.line.cos/3
+
+    #correcting translation due to rotation
+    if(self.line.slope<0): 
+      self.rect.x -= self.height * abs(self.line.cos)
     # print("up",(self.x-xx)**2+(self.rect.y-yy)**2)
 
   def moveDown(self, pixels):
-    xx = self.x
-    yy = self.rect.y
+
     # self.rect.y += self.line.sin*pixels
     # self.rect.x -= self.line.cos*pixels
     if self.line.c2[0]!=self.line.c1[0]:
@@ -77,22 +96,36 @@ class Paddle(pygame.sprite.Sprite):
 
       
       y = self.line.slope * self.x + c
+      self.y = y
       self.rect.y = y
     else:
       self.rect.y += pixels
+      self.y = self.rect.y
     
-    if self.rect.x < self.line.min_x:
-      self.rect.x = self.line.min_x
-    if self.rect.y < self.line.min_y:
-      self.rect.y = self.line.min_y
-    
-    if self.rect.x > self.line.max_x-self.height*abs(self.line.cos):
-      self.rect.x = self.line.max_x-self.height*abs(self.line.cos)
-    if self.rect.y > self.line.max_y-self.height*self.line.sin:
-      self.rect.y = self.line.max_y-self.height*self.line.sin
 
-    self.rect.x -= self.width*self.line.sin/2
-    self.rect.y -= self.width*self.line.cos/2
+    if self.rect.y < self.line.min_y:
+        self.rect.y = self.line.min_y
+    if self.rect.y > self.line.max_y-self.height*self.line.sin:
+        self.rect.y = self.line.max_y-self.height*self.line.sin
+
+    if self.line.slope>=0:
+      if self.rect.x < self.line.min_x:
+        self.rect.x = self.line.min_x    
+      if self.rect.x > self.line.max_x-self.height*abs(self.line.cos):
+        self.rect.x = self.line.max_x-self.height*abs(self.line.cos)
+      
+    else:
+      if self.rect.x < self.line.min_x + self.height*abs(self.line.cos):
+        self.rect.x = self.line.min_x + self.height*abs(self.line.cos)    
+      if self.rect.x > self.line.max_x:
+        self.rect.x = self.line.max_x
+
+    self.rect.x -= self.width*self.line.sin/3
+    self.rect.y -= self.width*self.line.cos/3
+
+    #correcting translation due to rotation
+    if(self.line.slope<0): 
+      self.rect.x -= self.height * abs(self.line.cos)
     # print("down",(self.x-xx)**2+(self.rect.y-yy)**2)
 
       

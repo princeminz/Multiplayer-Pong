@@ -72,7 +72,7 @@ def get_new_velocity(ball_vel, line):
   
 if __name__ == "__main__":
   client = Client()
-  client.connect_in_thread(port=8080, hostname='13.234.67.167')
+  client.connect_in_thread(port=8080, hostname='pong.samarpitminz.com')
   client.register_event_handler("sendPlayerNum", get_connection_num)
   client.register_event_handler("gameStarted", start_game)
   # client.register_event_handler("sendBallPosition", get_ball_position)

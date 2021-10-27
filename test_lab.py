@@ -22,7 +22,7 @@ from pygame.locals import (
 
 BLACK = (0,0,0)
 WHITE = (255,255,255)
-player_num = 1
+player_num = 2
 ready_players = [True, True, True]
   
 if __name__ == "__main__":
@@ -32,7 +32,7 @@ if __name__ == "__main__":
   clock = pygame.time.Clock()
 
   running = True
-  playfield = PlayField(color=WHITE, num_players=3)
+  playfield = PlayField(color=WHITE, num_players=4)
   ball = Ball((255, 255, 255), 24,24)
   ball.rect.x = playfield.margin_x+400
   ball.rect.y = playfield.margin_y+400
