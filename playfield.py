@@ -9,6 +9,7 @@ paddle_height = 75
 class PlayField(pygame.sprite.Group):
   def __init__(self, color, num_players):
     super().__init__()
+    coordinates = self.get_coordinates(num_players)
     # self.image = screen
     # self.image = pygame.Surface([width, height])
     # self.image.fill(BLACK)
@@ -39,7 +40,7 @@ class PlayField(pygame.sprite.Group):
       surface_x = min(coordinate1[0], coordinate2[0]) 
       surface_y = min(coordinate1[1], coordinate2[1])
       line.image = pygame.Surface([abs(coordinate1[0] - coordinate2[0])+5, abs(coordinate1[1] - coordinate2[1])+5], pygame.SRCALPHA)
-      pygame.draw.aaline(line.image, color, (coordinate1[0]-surface_x, coordinate1[1]-surface_y), (coordinate2[0]-surface_x, coordinate2[1]-surface_y))
+      pygame.draw.line(line.image, color, (coordinate1[0]-surface_x, coordinate1[1]-surface_y), (coordinate2[0]-surface_x, coordinate2[1]-surface_y),5)
       line.rect = line.image.get_rect()
       line.rect.x = surface_x
       line.rect.y = surface_y

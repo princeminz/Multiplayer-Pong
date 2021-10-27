@@ -1,3 +1,4 @@
+import math
 from pygase import GameState, Backend
 from datetime import datetime
 
@@ -8,7 +9,10 @@ initial_game_state = GameState(ball_position={"x": 20, "y": 50}, ball_velocity={
 player_id = {}
 
 SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 800
+SCREEN_HEIGHT = 600
+
+
+
 
 last = datetime.now()
 

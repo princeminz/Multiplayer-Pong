@@ -1,42 +1,10 @@
 [[package]]
-name = "curio"
-version = "0.9"
-description = "Curio - Concurrent I/O"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.extras]
-test = ["pytest", "sphinx"]
-
-[[package]]
-name = "ifaddr"
-version = "0.1.7"
-description = "Cross-platform network interface and IP address enumeration library"
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "pygame"
 version = "2.0.1"
 description = "Python Game Development"
 category = "main"
 optional = false
 python-versions = "*"
-
-[[package]]
-name = "pygase"
-version = "0.3.1"
-description = "game-ready client-server architecture and UDP-based network protocol - built to be easy to use, lightweight, fast, scalable and reliable"
-category = "main"
-optional = false
-python-versions = ">=3.6,<4.0"
-
-[package.dependencies]
-curio = ">=0.9.0,<0.10.0"
-ifaddr = ">=0.1.6,<0.2.0"
-u-msgpack-python = ">=2.5,<3.0"
 
 [[package]]
 name = "pyglet"
@@ -46,27 +14,12 @@ category = "main"
 optional = false
 python-versions = "*"
 
-[[package]]
-name = "u-msgpack-python"
-version = "2.7.1"
-description = "A portable, lightweight MessagePack serializer and deserializer written in pure Python."
-category = "main"
-optional = false
-python-versions = "*"
-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "9157b4259bc0cadaf1a36993b6a99eb2972900f3735ec0b7840dad68bd6e8542"
+content-hash = "c34906d5cb5c9c6c0b09751fc319915907ea89cef61596cf393670ec03f9575e"
 
 [metadata.files]
-curio = [
-    {file = "curio-0.9.tar.gz", hash = "sha256:51d1a7b49b4f8dd1486ac785c72d522962e93ccfdcfc1f818f5c7553a307b5ef"},
-]
-ifaddr = [
-    {file = "ifaddr-0.1.7-py2.py3-none-any.whl", hash = "sha256:d1f603952f0a71c9ab4e705754511e4e03b02565bc4cec7188ad6415ff534cd3"},
-    {file = "ifaddr-0.1.7.tar.gz", hash = "sha256:1f9e8a6ca6f16db5a37d3356f07b6e52344f6f9f7e806d618537731669eb1a94"},
-]
 pygame = [
     {file = "pygame-2.0.1-cp27-cp27m-macosx_10_9_intel.whl", hash = "sha256:49c2f58559c1fbf4ba258e4b141578ccb0e83da3d4f823894f6171a8f0d594ed"},
     {file = "pygame-2.0.1-cp27-cp27m-win32.whl", hash = "sha256:0571dde0277483f5060c8ee43cbfd8df5776b12505e3948eee241c8ce9b93371"},
@@ -110,15 +63,7 @@ pygame = [
     {file = "pygame-2.0.1-pp37-pypy37_pp73-manylinux2010_x86_64.whl", hash = "sha256:b812285d23b5644c643a6ae30553a772f935f47f61826660b108b8727936384b"},
     {file = "pygame-2.0.1.tar.gz", hash = "sha256:8b1e7b63f47aafcdd8849933b206778747ef1802bd3d526aca45ed77141e4001"},
 ]
-pygase = [
-    {file = "pygase-0.3.1-py3-none-any.whl", hash = "sha256:b1c8a129c1aade08fa9e14b69b747c56273e1212ff47b49a85c49dd500fc6151"},
-    {file = "pygase-0.3.1.tar.gz", hash = "sha256:3423c66181c2984168bfe208111f442fc897e238b542d1854ed43eefe8d135c6"},
-]
 pyglet = [
     {file = "pyglet-1.5.21-py3-none-any.whl", hash = "sha256:11f11ddda4ee456284f2ddd1fe5c62fe29ba8c42074d3d9ae52d094abc2e1b7c"},
     {file = "pyglet-1.5.21.zip", hash = "sha256:5aaaddb06dc4b6f9ba08254d8d806a2bd2406925a9caf3a51fdffbd5d09728e2"},
-]
-u-msgpack-python = [
-    {file = "u-msgpack-python-2.7.1.tar.gz", hash = "sha256:b7e7d433cab77171a4c752875d91836f3040306bab5063fb6dbe11f64ea69551"},
-    {file = "u_msgpack_python-2.7.1-py2.py3-none-any.whl", hash = "sha256:0eb339ae27ec3085945244d17b74fd1ed875e866974d63caaa85d90fca9060a7"},
 ]
