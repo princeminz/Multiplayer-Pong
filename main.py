@@ -22,7 +22,7 @@ BLACK = (0,0,0)
 WHITE = (255,255,255)
 connection_num = 0
 player_num = -1
-ready_players, paddle_position, ball_position, ball_velocity = [], 0, {"x":0,"y":0}, {"x":0,"y":0}
+player_match_status, paddle_position, ball_position, ball_velocity = [], 0, {"x":0,"y":0}, {"x":0,"y":0}
 menu_on = True
 
 paddle_width = 25
@@ -35,27 +35,27 @@ def get_connection_num(num):
   print("Got Connection Number", num)
 
 def get_data():
-  global ready_players, paddle_position, ball_position, ball_velocity
+  global player_match_status, paddle_position, ball_position, ball_velocity
   clock = pygame.time.Clock()  
   while 1:
     try:
       paddle_position = client.try_to(lambda game_state: game_state.paddle_position)
       ball_position = client.try_to(lambda game_state: game_state.ball_position)
       ball_velocity = client.try_to(lambda game_state: game_state.ball_velocity)
-      # ready_players = client.try_to(lambda game_state: game_state.ready_players)
+      player_match_status = client.try_to(lambda game_state: game_state.player_match_status)
     except:
       print('fetch failed!')
     # print("working", ball_velocity)
     clock.tick(60)
 
 
-def start_game(ready_p, paddle_p, ball_p):
+def start_game(player_match_stat, paddle_p, ball_p):
   print('gameStarted')
-  global menu_on, player_num, ready_players, paddle_position, ball_position
-  ready_players = ready_p
+  global menu_on, player_num, player_match_status, paddle_position, ball_position
+  player_match_status = player_match_stat
   paddle_position = paddle_p
   ball_position = ball_p
-  player_num = sum(ready_players[:connection_num+1]) - 1
+  player_num = player_match_status[:connection_num+1].count(3) - 1
   print('menu off')
   menu_on = False
 
@@ -128,22 +128,16 @@ if __name__ == "__main__":
     screen.blit(start_text, (button_x, start_y))
     screen.blit(quit_text, (button_x, quit_y))
     
-    i = 1
     player_text_x = SCREEN_WIDTH / 10
     player_text_y = SCREEN_HEIGHT / 10
     player_text_height = SCREEN_HEIGHT / 20
     player_text_width = SCREEN_WIDTH / 10
-    try:
-        for player in client.try_to(lambda game_state: game_state.ready_players):
-            if(player == True):
-                # print(player, i)
-                player_text = font.render('Player ' + str(i) + ' ready', True, (0,0,0))
-                pygame.draw.rect(screen, WHITE, [player_text_x, player_text_y, player_text_width, player_text_height])
-                screen.blit(player_text, (player_text_x, player_text_y))
-                player_text_y += (player_text_height + 20)
-            i += 1
-    except:
-        print('cant fetch ready player')
+    for i, player in enumerate(player_match_status):
+      if(player in [1, 2]):
+        player_text = font.render('Player ' + str(i) + ['Disconnected', ' Connected', ' Ready'][i], True, (0,0,0))
+        pygame.draw.rect(screen, WHITE, [player_text_x, player_text_y, player_text_width, player_text_height])
+        screen.blit(player_text, (player_text_x, player_text_y))
+        player_text_y += (player_text_height + 20)
 
     
     pygame.display.flip()
@@ -152,8 +146,8 @@ if __name__ == "__main__":
 
   running = True
   # print(sum(ready_players),ready_players)
-  playfield = PlayField(color=WHITE, num_players=sum(ready_players))
-  if(sum(ready_players)==2 and player_num==1):
+  playfield = PlayField(color=WHITE, num_players=player_match_status.count(3))
+  if(player_match_status.count(3)==2 and player_num==1):
     myboundary = playfield.sprites()[2]
   else:
     myboundary = playfield.sprites()[player_num]
@@ -173,31 +167,31 @@ if __name__ == "__main__":
     for event in pygame.event.get():
       if event.type == KEYDOWN:
         if event.key == K_ESCAPE:
-            running = False
+          running = False
       elif event.type == QUIT:
         running = False
     paddles = pygame.sprite.Group()
     paddle_sprite = {}
-    for i in range(len(ready_players)):
-        if(ready_players[i] and i != connection_num):
-            x, y = paddle_position[i]
-            paddle = None
-            if sum(ready_players)==2 and sum(ready_players[:i+1]) ==2:
-                paddle = Paddle((255, 255, 255), 25, 75, playfield.sprites()[2])   
-            else:
-                paddle = Paddle((255, 255, 255), 25, 75, playfield.sprites()[sum(ready_players[:i+1]) - 1])
-            paddle.rect.x = x + playfield.margin_x
-            paddle.rect.y = y + playfield.margin_y
-            paddles.add(paddle)
-            paddle_sprite[i] = paddle
+    for i in range(len(player_match_status)):
+      if(player_match_status[i] == 3 and i != connection_num):
+        x, y = paddle_position[i]
+        paddle = None
+        if player_match_status.count(3) == 2 and player_match_status[:i+1].count(3) == 2:
+          paddle = Paddle((255, 255, 255), 25, 75, playfield.sprites()[2])   
+        else:
+          paddle = Paddle((255, 255, 255), 25, 75, playfield.sprites()[player_match_status[:i+1].count(3) - 1])
+        paddle.rect.x = x + playfield.margin_x
+        paddle.rect.y = y + playfield.margin_y
+        paddles.add(paddle)
+        paddle_sprite[i] = paddle
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_UP]:
-        mypaddle.moveUp(5)
-        client.dispatch_event('paddleMove', position = (mypaddle.rect.x-playfield.margin_x, mypaddle.rect.y-playfield.margin_y))
+      mypaddle.moveUp(5)
+      client.dispatch_event('paddleMove', position = (mypaddle.rect.x-playfield.margin_x, mypaddle.rect.y-playfield.margin_y))
     if keys[pygame.K_DOWN]:
-        mypaddle.moveDown(5)
-        client.dispatch_event('paddleMove', position = (mypaddle.rect.x-playfield.margin_x, mypaddle.rect.y-playfield.margin_y))
+      mypaddle.moveDown(5)
+      client.dispatch_event('paddleMove', position = (mypaddle.rect.x-playfield.margin_x, mypaddle.rect.y-playfield.margin_y))
     screen.fill(BLACK)
 
 
@@ -207,16 +201,16 @@ if __name__ == "__main__":
     x, y = ball_position['x'] + playfield.margin_x, ball_position['y'] + playfield.margin_y
     # print(x,y)
     if x != ball.rect.x: 
-        ball.rect.x += (x - ball.rect.x) / itr
+      ball.rect.x += (x - ball.rect.x) / itr
     if y != ball.rect.y: 
-        ball.rect.y += (y - ball.rect.y) / itr
+      ball.rect.y += (y - ball.rect.y) / itr
     
     if prev_x == x and prev_y == y:
-        count += 1
+      count += 1
     else:
-        prev_x, prev_y = x, y
-        itr = (itr + count) / 2
-        count = 1
+      prev_x, prev_y = x, y
+      itr = (itr + count) / 2
+      count = 1
 
     # Collision 
     # for i, sprite in enumerate(playfield.sprites()):
@@ -224,12 +218,12 @@ if __name__ == "__main__":
     #         print("Collided with", i)
 
     if pygame.sprite.collide_mask(myboundary, ball):
-      client.dispatch_event("ballCollision", get_new_velocity(ball_velocity, myboundary), ball_position)
+      client.dispatch_event("ballCollision","line",connection_num, get_new_velocity(ball_velocity, myboundary), ball_position)
 
     if pygame.sprite.collide_mask(mypaddle,ball):
       vel = get_new_velocity(ball_velocity, myboundary)
       # print(vel,ball_velocity)
-      client.dispatch_event("ballCollision",vel , ball_position)
+      client.dispatch_event("ballCollision","paddle",connection_num, vel , ball_position)
     
     # print("ball_velocity: ", ball_velocity)
 
