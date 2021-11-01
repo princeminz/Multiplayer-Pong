@@ -1,11 +1,13 @@
 import pygame
 from player import Paddle
 from ball import Ball
-from pygase import Client, gamestate
+
 from playfield import PlayField
-import threading
+
 import time
 import numpy as np
+from network import Network
+from menu import Menu
 
 
 from pygame.locals import (
@@ -20,44 +22,14 @@ from pygame.locals import (
 
 BLACK = (0,0,0)
 WHITE = (255,255,255)
-connection_num = 0
-player_num = -1
-player_match_status, paddle_position, ball_position, ball_velocity = [], 0, {"x":0,"y":0}, {"x":0,"y":0}
-menu_on = True
+
 
 paddle_width = 25
 paddle_height = 75
 
 
-def get_connection_num(num):
-  global connection_num
-  connection_num = num
-  print("Got Connection Number", num)
-
-def get_data():
-  global player_match_status, paddle_position, ball_position, ball_velocity
-  clock = pygame.time.Clock()  
-  while 1:
-    try:
-      paddle_position = client.try_to(lambda game_state: game_state.paddle_position)
-      ball_position = client.try_to(lambda game_state: game_state.ball_position)
-      ball_velocity = client.try_to(lambda game_state: game_state.ball_velocity)
-      player_match_status = client.try_to(lambda game_state: game_state.player_match_status)
-    except:
-      print('fetch failed!')
-    # print("working", ball_velocity)
-    clock.tick(60)
 
 
-def start_game(player_match_stat, paddle_p, ball_p):
-  print('gameStarted')
-  global menu_on, player_num, player_match_status, paddle_position, ball_position
-  player_match_status = player_match_stat
-  paddle_position = paddle_p
-  ball_position = ball_p
-  player_num = player_match_status[:connection_num+1].count(3) - 1
-  print('menu off')
-  menu_on = False
 
 def get_new_velocity(ball_vel, line):
 
@@ -71,81 +43,13 @@ def get_new_velocity(ball_vel, line):
 
   
 if __name__ == "__main__":
-  client = Client()
-  client.connect_in_thread(port=8080, hostname='pong.samarpitminz.com')
-  client.register_event_handler("sendPlayerNum", get_connection_num)
-  client.register_event_handler("gameStarted", start_game)
-  # client.register_event_handler("sendBallPosition", get_ball_position)
-  client.dispatch_event("register")
-  pygase_thread = threading.Thread(target=get_data)
-  pygase_thread.start()
+  
   pygame.init()
   screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-  SCREEN_WIDTH, SCREEN_HEIGHT = pygame.display.Info().current_w, pygame.display.Info().current_h
-  
-  font = pygame.font.SysFont(name='systemfont', size=35) 
-  ready_text = font.render('READY', True, WHITE)
-  start_text = font.render('START', True, WHITE)
-  quit_text = font.render('QUIT', True, WHITE)
-
-  button_color = (170,170,170) 
-  button_x = 7*SCREEN_WIDTH/16
-  button_width = SCREEN_WIDTH/8
-  button_height = SCREEN_HEIGHT/8
-  ready_y = SCREEN_HEIGHT/4
-  start_y = ready_y + button_height + 20
-  quit_y = start_y + button_height + 20
-  clock = pygame.time.Clock()  
-  while menu_on:
-    for event in pygame.event.get():
-      if event.type == KEYDOWN:
-        if event.key == K_ESCAPE:
-          pygame.quit()
-      if event.type == QUIT:
-        pygame.quit()
-      
-      mouse = pygame.mouse.get_pos()
-      if event.type == pygame.MOUSEBUTTONDOWN: 
-        if button_x <= mouse[0] <= button_x + button_width:
-          if ready_y <= mouse[1] <= ready_y + button_height: 
-            print('ready')
-            client.dispatch_event("playerReady",connection_num)
-            
-          if start_y <= mouse[1] <= start_y + button_height: 
-            print('start')
-            client.dispatch_event("gameStart")
-          if quit_y <= mouse[1] <= quit_y + button_height: 
-            print('quit')
-            pygame.quit() 
-            exit()
-    
-    screen.fill((60,25,60)) 
-    pygame.draw.rect(screen, button_color, [button_x, ready_y, button_width, button_height])
-    pygame.draw.rect(screen, button_color, [button_x, start_y, button_width, button_height])
-    pygame.draw.rect(screen, button_color, [button_x, quit_y, button_width, button_height])
-    
-    screen.blit(ready_text, (button_x, ready_y))
-    screen.blit(start_text, (button_x, start_y))
-    screen.blit(quit_text, (button_x, quit_y))
-    
-    player_text_x = SCREEN_WIDTH / 10
-    player_text_y = SCREEN_HEIGHT / 10
-    player_text_height = SCREEN_HEIGHT / 20
-    player_text_width = SCREEN_WIDTH / 10
-    for i, player in enumerate(player_match_status):
-      if(player in [1, 2]):
-        player_text = font.render('Player ' + str(i) + ['Disconnected', ' Connected', ' Ready'][i], True, (0,0,0))
-        pygame.draw.rect(screen, WHITE, [player_text_x, player_text_y, player_text_width, player_text_height])
-        screen.blit(player_text, (player_text_x, player_text_y))
-        player_text_y += (player_text_height + 20)
-
-    
-    pygame.display.flip()
-    clock.tick(60)
-  
-
+  network = Network()
+  Menu(screen, network)
   running = True
-  # print(sum(ready_players),ready_players)
+
   playfield = PlayField(color=WHITE, num_players=player_match_status.count(3))
   if(player_match_status.count(3)==2 and player_num==1):
     myboundary = playfield.sprites()[2]
