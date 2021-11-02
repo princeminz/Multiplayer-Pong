@@ -32,8 +32,12 @@ class Menu:
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
+                        network.menu_on = False
+                        network.stop()
                         pygame.quit()
                     if event.type == QUIT:
+                        network.menu_on = False
+                        network.stop()
                         pygame.quit()
                 
                 mouse = pygame.mouse.get_pos()
@@ -45,11 +49,14 @@ class Menu:
                         
                         if start_y <= mouse[1] <= start_y + button_height: 
                             print('start')
-                            network.client.dispatch_event("gameStart")
+                            if network.player_match_status.count(3) > 1:
+                                network.client.dispatch_event("gameStart")
+
                         if quit_y <= mouse[1] <= quit_y + button_height: 
                             print('quit')
+                            network.menu_on = False
+                            network.stop()
                             pygame.quit() 
-                            exit()
 
             screen.fill((60,25,60)) 
             pygame.draw.rect(screen, button_color, [button_x, ready_y, button_width, button_height])
