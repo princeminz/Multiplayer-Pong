@@ -38,7 +38,6 @@ class Network:
         self.connection_num = 0
         self.player_num = -1
         self.player_match_status, self.paddle_position, self.ball_position, self.ball_velocity = [], 0, {"x":0,"y":0}, {"x":0,"y":0}
-        self.menu_on = True
         self.client = Client()
         self.client.connect_in_thread(port=8080, hostname='pong.samarpitminz.com')
         self.client.register_event_handler("sendPlayerNum", self.get_connection_num)

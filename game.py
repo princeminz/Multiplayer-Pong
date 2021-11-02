@@ -25,7 +25,7 @@ class Game:
         self.network.client.register_event_handler("reinitGameloop", self.reinit_gameloop)
         while network.running and self.network.player_match_status.count(3) > 1:
             self.gameloop()
-            sleep(2)
+            sleep(1)
 
     def reinit_gameloop(self):
         self.running = False
@@ -53,6 +53,19 @@ class Game:
         clock = pygame.time.Clock()  
         print(self.network.player_match_status)
         while self.running:
+
+            heart_image = pygame.image.load('heart.png')
+            heart_size = heart_image.get_rect().size
+            heart_y = 0
+            for i in range(len(self.network.player_lives)):
+                heart_x = 0
+                if self.network.player_match_status[i] in [3,4]:
+                    for j in range(self.network.player_lives[i]):
+                        heart_image.blit(self.screen,(heart_x,heart_y))
+                        heart_x += heart_size[0]+10       
+                    heart_y += heart_size[1]+10
+                    
+
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
                     if event.key == K_ESCAPE:

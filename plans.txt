@@ -1,16 +1,20 @@
 
 TODO:
 1. Scoring System
-    a. giving each player 3 lives before complete elimination.
-    b. on elimination the playfield's no. of sides decreases, game restarts
+    a. giving each player 3 lives before complete elimination. (done)
+    b. on elimination the playfield's no. of sides decreases, game restarts (done)
     c. Player Status Area on the right/left of the playfield 
     d. Game Over Screen (Winner / Loser) / Player Stats (Ranking)
     e. 
 
 2. Server Mangement System
     a. Connection State, Latency. Future: select server 
-    b. Ready
-    c. Rooms / multiple game (gamestates)
+    b. Single Room with player Ready State (done)
+    c. Multiple Rooms / multiple game (gamestates)
     d. 
 
-3. Improve UI
+3. Improve UI / Graphics
+
+4. Physics Engine
+
+5. Player Exit / Network lag handelling

@@ -67,17 +67,19 @@ class Menu:
             screen.blit(start_text, (button_x, start_y))
             screen.blit(quit_text, (button_x, quit_y))
 
+            latency_text = font.render('Latency: ' + str(round(1000* network.client.connection.latency)) + ' ms', True, WHITE)
+            screen.blit(latency_text, (8*SCREEN_WIDTH / 10, 8*SCREEN_HEIGHT / 10))
+
             player_text_x = SCREEN_WIDTH / 10
             player_text_y = SCREEN_HEIGHT / 10
             player_text_height = SCREEN_HEIGHT / 20
-            player_text_width = SCREEN_WIDTH / 10
+            player_text_width = SCREEN_WIDTH / 5
             for i, player in enumerate(network.player_match_status):
                 if(player in [1, 2]):
-                    player_text = font.render('Player ' + str(i) + ['Disconnected', ' Connected', ' Ready'][player], True, (0,0,0))
+                    player_text = font.render('Player ' + str(i) + ['Disconnected', ' Connected', ' Ready'][player], True, BLACK)
                     pygame.draw.rect(screen, WHITE, [player_text_x, player_text_y, player_text_width, player_text_height])
                     screen.blit(player_text, (player_text_x, player_text_y))
                     player_text_y += (player_text_height + 20)
-
 
             pygame.display.flip()
             clock.tick(60)
