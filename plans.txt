@@ -13,8 +13,10 @@ TODO:
     c. Multiple Rooms / multiple game (gamestates)
     d. 
 
-3. Improve UI / Graphics
+3. Improve UI / Graphics (WIP)
 
 4. Physics Engine
 
 5. Player Exit / Network lag handelling
+
+6. Sounds
