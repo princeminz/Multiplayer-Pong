@@ -9,3 +9,4 @@ if __name__ == "__main__":
   network = Network()
   Menu(screen, network)
   Game(screen, network)
+  network.pygase_thread.join()

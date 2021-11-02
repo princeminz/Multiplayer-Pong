@@ -1,5 +1,5 @@
 import pygame
-from pygase import Client, gamestate
+from pygase import Client
 import threading
 
 class Network:
@@ -31,8 +31,8 @@ class Network:
 
     def stop(self):
         self.running = False
-        self.pygase_thread.join()
         self.client.disconnect()
+        self.pygase_thread.join()
     
     def __init__(self) -> None:
         self.connection_num = 0
@@ -48,6 +48,3 @@ class Network:
         self.pygase_thread = threading.Thread(target=self.get_data)
         self.pygase_thread.start()
         print("network started")
-
-
-

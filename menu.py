@@ -49,7 +49,7 @@ class Menu:
                         
                         if start_y <= mouse[1] <= start_y + button_height: 
                             print('start')
-                            if network.player_match_status.count(3) > 1:
+                            if network.player_match_status.count(2) > 1:
                                 network.client.dispatch_event("gameStart")
 
                         if quit_y <= mouse[1] <= quit_y + button_height: 
@@ -71,7 +71,6 @@ class Menu:
             player_text_y = SCREEN_HEIGHT / 10
             player_text_height = SCREEN_HEIGHT / 20
             player_text_width = SCREEN_WIDTH / 10
-            print(network.player_match_status)
             for i, player in enumerate(network.player_match_status):
                 if(player in [1, 2]):
                     player_text = font.render('Player ' + str(i) + ['Disconnected', ' Connected', ' Ready'][player], True, (0,0,0))
