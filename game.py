@@ -46,23 +46,26 @@ class Game:
         
         ball = Ball((255, 255, 255), 24, 24)
         all_sprites_list.add(ball)
-        
         prev_x = self.network.ball_position['x']
         prev_y = self.network.ball_position['y']
         count, itr = 1, 1
         clock = pygame.time.Clock()  
         print(self.network.player_match_status)
+        font = pygame.font.SysFont(name='systemfont', size=30) 
+        heart_image = pygame.image.load('heart.png')
+        heart_size = heart_image.get_rect().size
         while self.running:
-
-            heart_image = pygame.image.load('heart.png')
-            heart_size = heart_image.get_rect().size
-            heart_y = 0
+            self.screen.fill(BLACK)
+            heart_y = 50
             for i in range(len(self.network.player_lives)):
-                heart_x = 0
+                player_text_x = 50
+                heart_x = player_text_x + 110
                 if self.network.player_match_status[i] in [3,4]:
+                    player_text = font.render('Player ' + str(i) + ':', True, WHITE)
+                    self.screen.blit(player_text, (player_text_x, heart_y))
                     for j in range(self.network.player_lives[i]):
-                        heart_image.blit(self.screen,(heart_x,heart_y))
-                        heart_x += heart_size[0]+10       
+                        self.screen.blit(heart_image,(heart_x, heart_y - 10))
+                        heart_x += heart_size[0] + 5    
                     heart_y += heart_size[1]+10
                     
 
@@ -122,7 +125,6 @@ class Game:
                 itr = (itr + count) / 2
                 count = 1
 
-            self.screen.fill(BLACK)
             playfield.draw(self.screen)
             all_sprites_list.draw(self.screen) 
             paddles.draw(self.screen) 

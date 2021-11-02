@@ -3,7 +3,7 @@ TODO:
 1. Scoring System
     a. giving each player 3 lives before complete elimination. (done)
     b. on elimination the playfield's no. of sides decreases, game restarts (done)
-    c. Player Status Area on the right/left of the playfield 
+    c. Player Status Area on the right/left of the playfield (done)
     d. Game Over Screen (Winner / Loser) / Player Stats (Ranking)
     e. 
 

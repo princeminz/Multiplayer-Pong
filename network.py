@@ -15,6 +15,7 @@ class Network:
                 self.ball_position = self.client.try_to(lambda game_state: game_state.ball_position)
                 self.ball_velocity = self.client.try_to(lambda game_state: game_state.ball_velocity)
                 self.player_match_status = self.client.try_to(lambda game_state: game_state.player_match_status)
+                self.player_lives = self.client.try_to(lambda game_state: game_state.player_lives)
             except:
                 print('fetch failed!')
             clock.tick(60)
