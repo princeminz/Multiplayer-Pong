@@ -31,11 +31,13 @@ class Menu:
         button_x = 3*SCREEN_WIDTH/5
         button_width = SCREEN_WIDTH/5
         button_height = SCREEN_HEIGHT/8
-        ready_y = SCREEN_HEIGHT/3
+        ready_y = SCREEN_HEIGHT/3 + 20
         start_y = ready_y + button_height + 20
         quit_y = start_y + button_height + 20
         clock = pygame.time.Clock()  
         while network.menu_on:
+            screen.blit(background, (0, 0))
+            mouse = pygame.mouse.get_pos()
             for event in pygame.event.get():
                 if event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
@@ -47,7 +49,6 @@ class Menu:
                         network.stop()
                         pygame.quit()
                 
-                mouse = pygame.mouse.get_pos()
                 if event.type == pygame.MOUSEBUTTONDOWN: 
                     if button_x <= mouse[0] <= button_x + button_width:
                         if ready_y <= mouse[1] <= ready_y + button_height: 
@@ -56,7 +57,7 @@ class Menu:
                         
                         if start_y <= mouse[1] <= start_y + button_height: 
                             print('start')
-                            if network.player_match_status.count(2) > 1:
+                            if list(network.player_match_status.values()).count(2) > 1:
                                 network.client.dispatch_event("gameStart")
 
                         if quit_y <= mouse[1] <= quit_y + button_height: 
@@ -65,14 +66,24 @@ class Menu:
                             network.stop()
                             pygame.quit() 
 
-            screen.blit(background, (0, 0))
-            # pygame.draw.rect(screen, button_color, [button_x, ready_y, button_width, button_height])
-            # pygame.draw.rect(screen, button_color, [button_x, start_y, button_width, button_height])
-            # pygame.draw.rect(screen, button_color, [button_x, quit_y, button_width, button_height])
+            if button_x <= mouse[0] <= button_x + button_width:
+                if ready_y <= mouse[1] <= ready_y + button_height: 
+                    pygame.draw.rect(screen, WHITE, [button_x, ready_y, button_width, button_height], width = 5, border_radius=int(button_height/4))
+                    
+                if start_y <= mouse[1] <= start_y + button_height: 
+                    pygame.draw.rect(screen, WHITE, [button_x, start_y, button_width, button_height], width = 5, border_radius=int(button_height/4))
+                
+                if quit_y <= mouse[1] <= quit_y + button_height: 
+                    pygame.draw.rect(screen, WHITE, [button_x, quit_y, button_width, button_height], width = 5, border_radius=int(button_height/4))
+                    
+            pygame.draw.rect(screen, WHITE, [button_x, ready_y, button_width, button_height], width = 2, border_radius=int(button_height/4))
+            pygame.draw.rect(screen, WHITE, [button_x, start_y, button_width, button_height], width = 2, border_radius=int(button_height/4))
+            pygame.draw.rect(screen, WHITE, [button_x, quit_y, button_width, button_height], width = 2, border_radius=int(button_height/4))
+
             screen.blit(title_text, (title_x, title_y))
-            screen.blit(ready_text, (button_x, ready_y))
-            screen.blit(start_text, (button_x, start_y))
-            screen.blit(quit_text, (button_x, quit_y))
+            screen.blit(ready_text, (button_x + button_width/4 - 20, ready_y + button_height/4))
+            screen.blit(start_text, (button_x + button_width/4 - 10, start_y + button_height/4))
+            screen.blit(quit_text, (button_x + button_width/3 - 10, quit_y + button_height/4))
             server_status = network.client.connection.status - 1
             if server_status < 3: 
                 server_status_text = font.render('Server ' + ['Disconnected', 'Connecting', 'Connected'][server_status], True, WHITE)
@@ -84,7 +95,7 @@ class Menu:
             player_text_y = ready_y
             player_text_height = SCREEN_HEIGHT / 20
             # player_text_width = SCREEN_WIDTH / 5
-            for i, player in enumerate(network.player_match_status):
+            for i, player in network.player_match_status.items():
                 if(player in [1, 2]):
                     player_text = font.render('Player ' + str(i) + [': Disconnected', ': Connected', ': Ready'][player], True, WHITE)
                     # pygame.draw.rect(screen, WHITE, [player_text_x, player_text_y, player_text_width, player_text_height])

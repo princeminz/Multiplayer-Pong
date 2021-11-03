@@ -8,10 +8,10 @@ TODO:
     e. 
 
 2. Server Mangement System
-    a. Connection State, Latency. Future: select server 
+    a. Connection State, Latency (done). Future: select server 
     b. Single Room with player Ready State (done)
     c. Multiple Rooms / multiple game (gamestates)
-    d. 
+    d. Fix Starting Connection Number bug (done)
 
 3. Improve UI / Graphics (WIP)
 

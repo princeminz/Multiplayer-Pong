@@ -23,7 +23,7 @@ class Game:
         self.screen = screen
         self.network = network
         self.network.client.register_event_handler("reinitGameloop", self.reinit_gameloop)
-        while network.running and self.network.player_match_status.count(3) > 1:
+        while network.running and list(self.network.player_match_status.values()).count(3) > 1:
             self.gameloop()
             sleep(1)
 
@@ -31,14 +31,16 @@ class Game:
         self.running = False
 
     def gameloop(self):
+        SCREEN_WIDTH, SCREEN_HEIGHT = pygame.display.Info().current_w, pygame.display.Info().current_h
         self.running = self.network.running
-        playfield = PlayField(color=WHITE, num_players=self.network.player_match_status.count(3))
+        num_players = list(self.network.player_match_status.values()).count(3)
+        playfield = PlayField(color=WHITE, num_players=num_players)
         all_sprites_list = pygame.sprite.Group()
         if self.network.player_match_status[self.network.connection_num]==3:
-            if(self.network.player_match_status.count(3)==2 and self.network.player_num==1):
+            if(num_players == 2 and self.network.player_num == 2):
                 myboundary = playfield.sprites()[2]
             else:
-                myboundary = playfield.sprites()[self.network.player_num]
+                myboundary = playfield.sprites()[self.network.player_num - 1]
             mypaddle = Paddle((255, 255, 255), paddle_width,paddle_height, myboundary)
             self.network.client.dispatch_event('paddleMove', position = (mypaddle.rect.x-playfield.margin_x, mypaddle.rect.y-playfield.margin_y))
             all_sprites_list.add(mypaddle)
@@ -51,15 +53,18 @@ class Game:
         count, itr = 1, 1
         clock = pygame.time.Clock()  
         print(self.network.player_match_status)
-        font = pygame.font.SysFont(name='systemfont', size=30) 
+        font = pygame.font.Font('font.ttf', 32) 
         heart_image = pygame.image.load('heart.png')
         heart_size = heart_image.get_rect().size
+        background = pygame.image.load('background.png')
+        background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
+        
         while self.running:
-            self.screen.fill(BLACK)
+            self.screen.blit(background, (0, 0))
             heart_y = 50
-            for i in range(len(self.network.player_lives)):
+            for i in self.network.player_lives.keys():
                 player_text_x = 50
-                heart_x = player_text_x + 110
+                heart_x = player_text_x + 160
                 if self.network.player_match_status[i] in [3,4]:
                     player_text = font.render('Player ' + str(i) + ':', True, WHITE)
                     self.screen.blit(player_text, (player_text_x, heart_y))
@@ -79,23 +84,22 @@ class Game:
                     self.running = False
                     self.network.stop()
                     pygame.quit()
-            
+
             paddles = pygame.sprite.Group()
-            paddle_sprite = {}
-            for i in range(len(self.network.player_match_status)):
-                if(self.network.player_match_status[i] == 3 and i != self.network.connection_num):
-                    x, y = self.network.paddle_position[i]
+            match_status = list(self.network.player_match_status.values())
+            for i, (connection_num, status) in enumerate(self.network.player_match_status.items()):
+                if(status == 3 and connection_num != self.network.connection_num):
+                    x, y = self.network.paddle_position[connection_num]
                     paddle = None
-                    if self.network.player_match_status.count(3) == 2 and self.network.player_match_status[:i+1].count(3) == 2:
+                    if num_players == 2 and match_status[:i+1].count(3) == 2:
                         paddle = Paddle((255, 255, 255), 25, 75, playfield.sprites()[2])   
                     else:
-                        paddle = Paddle((255, 255, 255), 25, 75, playfield.sprites()[self.network.player_match_status[:i+1].count(3) - 1])
+                        paddle = Paddle((255, 255, 255), 25, 75, playfield.sprites()[match_status[:i+1].count(3) - 1])
                     paddle.rect.x = x + playfield.margin_x
                     paddle.rect.y = y + playfield.margin_y
                     paddles.add(paddle)
-                    paddle_sprite[i] = paddle
 
-            if self.network.player_match_status[self.network.connection_num]==3:
+            if self.network.player_match_status[self.network.connection_num] == 3:
                 keys = pygame.key.get_pressed()
                 if keys[pygame.K_UP]:
                     mypaddle.moveUp(5)
@@ -125,6 +129,13 @@ class Game:
                 itr = (itr + count) / 2
                 count = 1
 
+            server_status = self.network.client.connection.status - 1
+            if server_status < 3: 
+                server_status_text = font.render('Server ' + ['Disconnected', 'Connecting', 'Connected'][server_status], True, WHITE)
+                self.screen.blit(server_status_text, (7*SCREEN_WIDTH / 9, 9*SCREEN_HEIGHT / 10 - 50))
+                latency_text = font.render('Latency: ' + str(round(1000* self.network.client.connection.latency)) + ' ms', True, WHITE)
+                self.screen.blit(latency_text, (7*SCREEN_WIDTH / 9, 9*SCREEN_HEIGHT / 10))
+            
             playfield.draw(self.screen)
             all_sprites_list.draw(self.screen) 
             paddles.draw(self.screen) 
