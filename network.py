@@ -11,11 +11,8 @@ class Network:
         clock = pygame.time.Clock()  
         while self.running:
             try:
-                self.paddle_position = self.client.try_to(lambda game_state: game_state.paddle_position)
-                self.ball_position = self.client.try_to(lambda game_state: game_state.ball_position)
-                self.ball_velocity = self.client.try_to(lambda game_state: game_state.ball_velocity)
-                self.player_match_status = self.client.try_to(lambda game_state: game_state.player_match_status)
-                self.player_lives = self.client.try_to(lambda game_state: game_state.player_lives)
+                game_state = self.client.try_to(lambda game_state: [game_state.player_match_status,game_state.ball_position,game_state.paddle_position,game_state.ball_velocity,game_state.game_on,game_state.player_lives])
+                self.player_match_status , self.ball_position , self.paddle_position, self.ball_velocity,self.game_on,self.player_lives = game_state
             except:
                 print('fetch failed!')
             clock.tick(60)
@@ -45,6 +42,7 @@ class Network:
         self.client.register_event_handler("gameStarted", self.start_game)
         self.client.dispatch_event("register")
         self.running = True
+        self.game_on = False
         self.pygase_thread = threading.Thread(target=self.get_data)
         self.pygase_thread.start()
         print("network started")

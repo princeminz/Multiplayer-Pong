@@ -36,6 +36,8 @@ class Menu:
         quit_y = start_y + button_height + 20
         clock = pygame.time.Clock()  
         while network.menu_on:
+            if network.game_on == True and network.player_match_status[network.connection_num]==3:
+                network.menu_on = False
             screen.blit(background, (0, 0))
             mouse = pygame.mouse.get_pos()
             for event in pygame.event.get():
@@ -104,3 +106,5 @@ class Menu:
 
             pygame.display.flip()
             clock.tick(60)
+
+            

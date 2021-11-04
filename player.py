@@ -6,9 +6,9 @@ BLACK = (0,0,0)
 
 
 class Paddle(pygame.sprite.Sprite):
-  def __init__(self, color, width, height, line):
+  def __init__(self, color, width, height, line,image_name):
     super().__init__()
-    image = pygame.image.load('paddle.png')
+    image = pygame.image.load(image_name)
     self.image = pygame.Surface([width, height],pygame.SRCALPHA)
     self.image.fill(BLACK)
     
