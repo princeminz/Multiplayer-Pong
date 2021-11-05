@@ -1,5 +1,7 @@
 import pygame
+import pymunk
 import math
+from pymunk.vec2d import Vec2d
 BLACK = (0, 0, 0)
 SIDE_LENGTH = 800
 paddle_width = 25
@@ -10,14 +12,17 @@ class PlayField(pygame.sprite.Group):
   def __init__(self, color, num_players):
     super().__init__()
     coordinates = self.get_coordinates(num_players)
-    # self.image = screen
-    # self.image = pygame.Surface([width, height])
-    # self.image.fill(BLACK)
-    # self.image.set_colorkey(BLACK)
-    # pygame.draw.polygon(self.image, color, coordinates, width)
-    # self.rect = self.image.get_rect()
-    # self.color = color
-    self.draw_polygon(color, self.get_coordinates(num_players))
+    self.body = pymunk.Body(body_type = pymunk.Body.STATIC)
+    self.body.position = 0, 0
+    self.draw_polygon(color, coordinates)
+    self.create_shape()
+  
+  def create_shape(self):
+    self.shape = [  pymunk.Segment(self.body, 
+                    pymunk.pygame_util.from_pygame(line.c1, line.image), 
+                    pymunk.pygame_util.from_pygame(line.c2, line.image), 
+                    1) for line in self.sprites() ]
+    for segment in self.shape: segment.elasticity = 1
 
   def get_coordinates(self, n):
     SCREEN_WIDTH, SCREEN_HEIGHT = pygame.display.Info().current_w, pygame.display.Info().current_h
@@ -45,22 +50,26 @@ class PlayField(pygame.sprite.Group):
       line.rect.x = surface_x
       line.rect.y = surface_y
       line.mask = pygame.mask.from_surface(line.image)
-      dist = self.distance(coordinate1,coordinate2)
+      
+      line.slope = float("inf")
+      v_x = coordinate1[0] - coordinate2[0] 
+      v_y = coordinate1[1] - coordinate2[1]
+      if v_x != 0: line.slope = v_y / v_x
+      line.length = self.distance(coordinate1, coordinate2)
+      
+      if v_y == 0: v_x = abs(v_x)
+      if v_x == 0: v_y = abs(v_y)
+      
+      if line.slope > 0: v_x, v_y = -v_x, -v_y
 
+      line.v_hat = Vec2d(v_x / line.length, v_y / line.length)
       line.min_x = min(coordinate1[0], coordinate2[0])
       line.min_y = min(coordinate1[1], coordinate2[1])
       line.max_x = max(coordinate1[0], coordinate2[0])
       line.max_y = max(coordinate1[1], coordinate2[1])
+      line.midpoint = Vec2d((coordinate1[0] + coordinate2[0]) / 2, (coordinate1[1] + coordinate2[1]) / 2)
       line.c1 = coordinate1
       line.c2 = coordinate2
-      
-      line.sin = abs((coordinate1[1] - coordinate2[1]) / dist)
-      line.cos = abs((coordinate1[0] - coordinate2[0]) / dist)
-      line.slope = float("inf")
-      
-      if coordinate1[0] != coordinate2[0]:
-        line.slope = (coordinate1[1] - coordinate2[1])/ (coordinate1[0] - coordinate2[0])
-        if(line.slope > 0): line.cos *= -1
       
       self.add(line)
       

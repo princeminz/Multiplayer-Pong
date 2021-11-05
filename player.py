@@ -1,12 +1,14 @@
 import pygame
-from math import degrees, asin, acos
+import pymunk
+from pymunk.vec2d import Vec2d
+from math import degrees, asin, acos, pi, radians
 
 WHITE = (255, 255, 255)
 BLACK = (0,0,0)
 
 
 class Paddle(pygame.sprite.Sprite):
-  def __init__(self, color, width, height, line,image_name):
+  def __init__(self, color, width, height, line, image_name):
     super().__init__()
     image = pygame.image.load(image_name)
     self.image = pygame.Surface([width, height],pygame.SRCALPHA)
@@ -21,111 +23,49 @@ class Paddle(pygame.sprite.Sprite):
 
     self.rect = self.image.get_rect()
     self.line = line
-    # print(self.line.sin,"sin")
-    angle = 90 - round( degrees( asin( self.line.sin ) ), -1)
-    if line.slope < 0: angle *=-1
-    self.image = pygame.transform.rotate(self.image, angle )
-    # print(angle) 
+
+    self.angle = 90 - round( degrees( asin( abs(self.line.v_hat.y) ) ), -1)
+    if line.slope < 0: self.angle *= -1
     self.width = width
     self.height = height
-    self.rect.x = (self.line.max_x + self.line.min_x)/2 - self.width*self.line.sin/3
-    self.rect.y = (self.line.max_y + self.line.min_y)/2 - self.width*self.line.cos/3
-    # self.rect.x = (self.line.max_x + self.line.min_x)/2
-    # self.rect.y = (self.line.max_y + self.line.min_y)/2
-    self.x = (self.line.max_x + self.line.min_x)/2
-    self.y = 0
+    self.translated_mid = self.translate_to_middle(self.line.midpoint)
+    self.velocity_magnitude = 200
+    self.body = pymunk.Body(body_type = pymunk.Body.KINEMATIC)
+    x, y = self.translate_to_middle(self.line.midpoint)
+    self.body.position = pymunk.pygame_util.from_pygame((x, y), self.image)
+    self.shape = pymunk.Segment(self.body, (0, -height/2), (0, height/2), width/2)
+    self.body.angle = -radians(self.angle)
+    self.shape.elasticity = 1
 
-    #correcting translation due to rotation
-    if(self.line.slope<0): 
-      self.rect.x -= self.height * abs(self.line.cos)
-
-    # self.x = self.rect.x
-
-
-  def moveUp(self, pixels):
-    if self.line.c2[0] != self.line.c1[0]:
-      # self.rect.x += self.width*self.line.sin/2
-      self.x += pixels * self.line.cos
-      self.rect.x = self.x
-      c = self.line.c1[1] - self.line.slope*self.line.c1[0]
-      y = self.line.slope * self.x + c
-      self.y = y
-      self.rect.y = y
-    else:
-      self.rect.y -= pixels
-      self.y = self.rect.y
+  def move(self, reverse=False):
+    # self.translate_to_middle(self.line.midpoint).get_distance(self.body.position) + self.height / 2 < self.line.length
     
-
-    if self.rect.y < self.line.min_y:
-        self.rect.y = self.line.min_y
-    if self.rect.y > self.line.max_y-self.height*self.line.sin:
-        self.rect.y = self.line.max_y-self.height*self.line.sin
-
-    if self.line.slope>=0:
-      if self.rect.x < self.line.min_x:
-        self.rect.x = self.line.min_x    
-      if self.rect.x > self.line.max_x-self.height*abs(self.line.cos):
-        self.rect.x = self.line.max_x-self.height*abs(self.line.cos)
-      
+    if reverse and (self.translated_mid - 5*self.line.v_hat).get_distance(self.body.position) + self.height / 2 < self.line.length / 2:
+      self.body.velocity = self.velocity_magnitude * self.line.v_hat
+    elif reverse == False and (self.translated_mid + 5*self.line.v_hat).get_distance(self.body.position) + self.height / 2 < self.line.length / 2:
+      self.body.velocity = -self.velocity_magnitude * self.line.v_hat
     else:
-      if self.rect.x < self.line.min_x + self.height*abs(self.line.cos):
-        self.rect.x = self.line.min_x + self.height*abs(self.line.cos)    
-      if self.rect.x > self.line.max_x:
-        self.rect.x = self.line.max_x
+      self.body.velocity = 0, 0
 
+  def stop(self):
+      self.body.velocity = 0, 0
+  
+  def blitRotate(self, surf):
 
-    self.rect.x -= self.width*self.line.sin/3
-    self.rect.y -= self.width*self.line.cos/3
-
-    #correcting translation due to rotation
-    if(self.line.slope<0): 
-      self.rect.x -= self.height * abs(self.line.cos)
-    # print("up",(self.x-xx)**2+(self.rect.y-yy)**2)
-
-  def moveDown(self, pixels):
-
-    # self.rect.y += self.line.sin*pixels
-    # self.rect.x -= self.line.cos*pixels
-    if self.line.c2[0]!=self.line.c1[0]:
-      # self.rect.x += self.width*self.line.sin/2   
-      
-      self.x -= (pixels * self.line.cos)
-      self.rect.x = self.x
-      c = self.line.c1[1] - self.line.slope*self.line.c1[0]
-      # print("down", pixels,pixels*self.line.cos, self.rect.x-xx)
-
-      
-      y = self.line.slope * self.x + c
-      self.y = y
-      self.rect.y = y
-    else:
-      self.rect.y += pixels
-      self.y = self.rect.y
+    image_rect = self.image.get_rect(topleft = (self.body.position.x - self.width/2, self.body.position.y-self.height/2))
+    offset_center_to_pivot = pygame.math.Vector2(self.body.position) - image_rect.center
     
+    rotated_offset = offset_center_to_pivot.rotate(-self.angle)
 
-    if self.rect.y < self.line.min_y:
-        self.rect.y = self.line.min_y
-    if self.rect.y > self.line.max_y-self.height*self.line.sin:
-        self.rect.y = self.line.max_y-self.height*self.line.sin
+    rotated_image_center = (self.body.position.x  - rotated_offset.x, self.body.position.y - rotated_offset.y)
+    rotated_image = pygame.transform.rotate(self.image, self.angle)
+    rotated_image_rect = rotated_image.get_rect(center = rotated_image_center)
 
-    if self.line.slope>=0:
-      if self.rect.x < self.line.min_x:
-        self.rect.x = self.line.min_x    
-      if self.rect.x > self.line.max_x-self.height*abs(self.line.cos):
-        self.rect.x = self.line.max_x-self.height*abs(self.line.cos)
-      
+    surf.blit(rotated_image, rotated_image_rect)
+  
+  def translate_to_middle(self, v):
+    n_hat = self.line.v_hat.perpendicular_normal()
+    if (v + (self.width/2+10)*n_hat).get_distance(Vec2d(400, 400)) < (v - (self.width/2+10)*n_hat).get_distance(Vec2d(400, 400)):
+      return v + self.width/2*n_hat
     else:
-      if self.rect.x < self.line.min_x + self.height*abs(self.line.cos):
-        self.rect.x = self.line.min_x + self.height*abs(self.line.cos)    
-      if self.rect.x > self.line.max_x:
-        self.rect.x = self.line.max_x
-
-    self.rect.x -= self.width*self.line.sin/3
-    self.rect.y -= self.width*self.line.cos/3
-
-    #correcting translation due to rotation
-    if(self.line.slope<0): 
-      self.rect.x -= self.height * abs(self.line.cos)
-    # print("down",(self.x-xx)**2+(self.rect.y-yy)**2)
-
-      
+      return v - self.width/2*n_hat

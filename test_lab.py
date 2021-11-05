@@ -1,13 +1,14 @@
 import pygame
 from player import Paddle
 from ball import Ball
-from pygase import Client
 from playfield import PlayField
-import threading
-import time
 import numpy as np
 from math import sin,cos,pi,acos,asin
 from random import uniform
+import pymunk
+import pymunk.pygame_util
+import matplotlib.pyplot as plt
+import pymunk.matplotlib_util
 
 
 from pygame.locals import (
@@ -23,66 +24,66 @@ from pygame.locals import (
 BLACK = (0,0,0)
 WHITE = (255,255,255)
 player_num = 2
-ready_players = [True, True, True]
   
 if __name__ == "__main__":
-  screen = pygame.display.set_mode((1900, 1060))
+  screen = pygame.display.set_mode((1000, 1000))
   SCREEN_WIDTH, SCREEN_HEIGHT = pygame.display.Info().current_w, pygame.display.Info().current_h
 
   clock = pygame.time.Clock()
 
   running = True
-  playfield = PlayField(color=WHITE, num_players=4)
+  playfield = PlayField(color=WHITE, num_players=3)
   ball = Ball((255, 255, 255), 24,24)
   ball.rect.x = playfield.margin_x+400
   ball.rect.y = playfield.margin_y+400
+  ball.body.position = pymunk.pygame_util.from_pygame((ball.rect.x, ball.rect.y), ball.image)
   myboundary = playfield.sprites()[player_num]
-  mypaddle = Paddle((255, 255, 255), 25, 75, myboundary)
+  mypaddle = Paddle((255, 255, 255), 25, 75, myboundary, "my_paddle.png")
   all_sprites_list = pygame.sprite.Group()
   all_sprites_list.add(ball)
-  all_sprites_list.add(mypaddle)
-  ball_vel_magnitude = 8
+  ball_vel_magnitude = 500
   in_angle = uniform(0,2*pi)
-  ball_vel = {"x":cos(in_angle),"y":sin(in_angle)}
   count = 0 
+  space = pymunk.Space()
+  # space.gravity = (0, 0)
+  space.add(ball.body, ball.shape)
+  ball.body.velocity = (ball_vel_magnitude*cos(in_angle), ball_vel_magnitude*sin(in_angle))
+  space.add(playfield.body, *playfield.shape)
+  space.add(mypaddle.body, mypaddle.shape)
+  fig = plt.figure(figsize=(14,10))
+  ax = plt.axes(xlim=(0, 1100), ylim=(0, 1100))
+  ax.set_aspect("equal")
+  o = pymunk.matplotlib_util.DrawOptions(ax)
+  space.debug_draw(o)
+  fig.savefig("matplotlib_util_demo.png", bbox_inches="tight")
+
   while running:
     for event in pygame.event.get():
       if event.type == KEYDOWN:
         if event.key == K_ESCAPE:
-            running = False
-      elif event.type == QUIT:
-        running = False
-
+          running = False
+          pygame.quit()
+        if event.type == QUIT:
+          running = False
+          pygame.quit()
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_UP]:
-      mypaddle.moveUp(5)
-    if keys[pygame.K_DOWN]:
-      mypaddle.moveDown(5)
-    screen.fill(BLACK)
-
-    for line in playfield.sprites():
-      if  pygame.sprite.collide_mask(ball,line) and count!=1:
-        #  𝑟 = 𝑑 − 2𝑑 ⋅ 𝑛 / (‖𝑛‖^2) 𝑛
-        d = np.array(list(ball_vel.values()))
-
-        n = np.array([-(line.c1[1] - line.c2[1]), line.c1[0] - line.c2[0]])
-        n_hat = n / np.linalg.norm(n)
-        
-        r = d - (2 * np.dot(d, n_hat)) * n_hat
-        # print("prev", ball_vel, d, n, n_hat)
-        ball_vel["x"] = r[0]
-        ball_vel["y"] = r[1]
-        # print("after", ball_vel, d, n, n_hat)
-        count = 0
+    if keys[pygame.K_UP] or keys[K_RIGHT] : mypaddle.move(True)
+    elif keys[pygame.K_DOWN] or keys[K_LEFT]: mypaddle.move()
+    else: mypaddle.stop()
     
-
+    screen.fill(BLACK)
+    
     count +=1
-    ball.rect.x += ball_vel["x"]*ball_vel_magnitude
-    ball.rect.y += ball_vel["y"]*ball_vel_magnitude
-    # print(ball.rect.x,ball.rect.y)
-
+    
+    space.step(1/60)
+    ball.rect.x, ball.rect.y = pymunk.pygame_util.to_pygame((ball.body.position.x-12, ball.body.position.y-12), ball.image)
+    mypaddle.rect.x, mypaddle.rect.y = pymunk.pygame_util.to_pygame((mypaddle.body.position.x, mypaddle.body.position.y), mypaddle.image)
+    mypaddle.rect.x -= 75/2
+    mypaddle.rect.y -= 25/2
     playfield.draw(screen)
     all_sprites_list.draw(screen) 
+    mypaddle.blitRotate(screen)
+    # if ball.rect.x != ball.body.position.x or ball.rect.y != ball.body.position.y: print(ball.rect.x, ball.body.position.x, ball.rect.y, ball.body.position.y)
     pygame.display.flip()
     clock.tick(60)
 

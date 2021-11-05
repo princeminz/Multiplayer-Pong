@@ -6,7 +6,11 @@ from playfield import PlayField
 from player import Paddle
 from ball import Ball
 import numpy as np
+from math import sin,cos,pi,acos,asin
+from random import uniform
 from final_screen import Final_Screen
+import pymunk
+import pymunk.pygame_util
 from pygame.locals import (
   K_UP,
   K_DOWN,
@@ -17,6 +21,7 @@ from pygame.locals import (
   QUIT,
   K_SPACE
 )
+
 paddle_width = 25
 paddle_height = 75
 BLACK = (0,0,0)
@@ -58,7 +63,7 @@ class Game:
                 myboundary = playfield.sprites()[self.network.player_num - 1]
             mypaddle = Paddle((255, 255, 255), paddle_width,paddle_height, myboundary,"my_paddle.png")
             self.network.client.dispatch_event('paddleMove', position = (mypaddle.rect.x-playfield.margin_x, mypaddle.rect.y-playfield.margin_y))
-            all_sprites_list.add(mypaddle)
+            # all_sprites_list.add(mypaddle)
         print('event dispatched')
         
         # ball = Ball((255, 255, 255), 24, 24)
@@ -73,6 +78,14 @@ class Game:
         heart_size = heart_image.get_rect().size
         background = pygame.image.load('background.png')
         background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
+        
+        ball_vel_magnitude = 200
+        in_angle = uniform(0,2*pi)
+        space = pymunk.Space()
+        space.add(ball.body, ball.shape)
+        ball.body.velocity = (ball_vel_magnitude*cos(in_angle), ball_vel_magnitude*sin(in_angle))
+        space.add(playfield.body, *playfield.shape)
+        space.add(mypaddle.body, mypaddle.shape)
         
         while self.running:
             self.screen.blit(background, (0, 0))
@@ -117,20 +130,23 @@ class Game:
 
             if self.network.player_match_status[self.network.connection_num] == 3:
                 keys = pygame.key.get_pressed()
-                if keys[pygame.K_UP]:
-                    mypaddle.moveUp(5)
+                if keys[pygame.K_UP] or keys[K_RIGHT] : 
+                    mypaddle.move(True) 
                     self.network.client.dispatch_event('paddleMove', position = (mypaddle.rect.x-playfield.margin_x, mypaddle.rect.y-playfield.margin_y))
-                if keys[pygame.K_DOWN]:
-                    mypaddle.moveDown(5)
+                elif keys[pygame.K_DOWN] or keys[K_LEFT]: 
+                    mypaddle.move()
                     self.network.client.dispatch_event('paddleMove', position = (mypaddle.rect.x-playfield.margin_x, mypaddle.rect.y-playfield.margin_y))
+                else: mypaddle.stop()
+    
 
                 # Collision 
-                if pygame.sprite.collide_mask(myboundary, ball):
-                    self.network.client.dispatch_event("ballCollision", "line", self.network.connection_num, self.get_new_velocity(self.network.ball_velocity, myboundary), self.network.ball_position)
+                # if pygame.sprite.collide_mask(myboundary, ball):
+                #     self.network.client.dispatch_event("ballCollision", "line", self.network.connection_num, self.get_new_velocity(self.network.ball_velocity, myboundary), self.network.ball_position)
 
-                if pygame.sprite.collide_mask(mypaddle,ball):
-                    vel = self.get_new_velocity(self.network.ball_velocity, myboundary)
-                    self.network.client.dispatch_event("ballCollision", "paddle", self.network.connection_num, vel, self.network.ball_position)
+                # if pygame.sprite.collide_mask(mypaddle,ball):
+                #     vel = self.get_new_velocity(self.network.ball_velocity, myboundary)
+                #     self.network.client.dispatch_event("ballCollision", "paddle", self.network.connection_num, vel, self.network.ball_position)
+
             
             x, y = self.network.ball_position['x'] + playfield.margin_x, self.network.ball_position['y'] + playfield.margin_y
             if x != ball.rect.x: 
@@ -156,9 +172,14 @@ class Game:
                 message_font = pygame.font.Font('font.ttf', 60) 
                 message_surface = message_font.render(self.message,True,WHITE)
                 self.screen.blit(message_surface,(playfield.margin_x+200,playfield.margin_y+300))
+            
+            space.step(1/60)
+            ball.rect.x, ball.rect.y = pymunk.pygame_util.to_pygame((ball.body.position.x-12, ball.body.position.y-12), ball.image)
+            mypaddle.blitRotate(self.screen)
+
             playfield.draw(self.screen)
             all_sprites_list.draw(self.screen) 
-            paddles.draw(self.screen) 
+            for paddle in paddles.sprites(): paddle.blitRotate(self.screen)
             pygame.display.flip()
             clock.tick(60)
 

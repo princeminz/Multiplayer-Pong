@@ -4,18 +4,18 @@ TODO:
     a. giving each player 3 lives before complete elimination. (done)
     b. on elimination the playfield's no. of sides decreases, game restarts (done)
     c. Player Status Area on the right/left of the playfield (done)
-    d. Game Over Screen (Winner / Loser) / Player Stats (Ranking)
+    d. Game Over Screen (Winner / Loser) / Player Stats (Ranking) (WIP)
     e. 
 
 2. Server Mangement System
-    a. Connection State, Latency (done). Future: select server 
+    a. Connection State, Latency (done)
     b. Single Room with player Ready State (done)
-    c. Multiple Rooms / multiple game (gamestates)
+    c. Multiple Rooms / multiple game (gamestates) / multiple servers
     d. Fix Starting Connection Number bug (done)
 
 3. Improve UI / Graphics (WIP)
 
-4. Physics Engine
+4. Physics Engine (WIP)
 
 5. Player Exit / Network lag handelling
 
