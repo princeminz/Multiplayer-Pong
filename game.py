@@ -64,7 +64,7 @@ class Game:
         if self.network.player_match_status[self.network.connection_num]==3:
             playfield = PlayField(color=WHITE, num_players=num_players, player_num=self.network.player_num)
             mypaddle = Paddle((255, 255, 255), paddle_width,paddle_height, playfield.my_line, "my_paddle.png")
-            self.network.client.dispatch_event('paddleMove', position = (mypaddle.rect.x-playfield.margin_x, mypaddle.rect.y-playfield.margin_y))
+            self.network.client.dispatch_event('paddleMove', position = (mypaddle.body.position[0]-playfield.margin_x, mypaddle.body.position[1]-playfield.margin_y))
         
         # prev_x = self.network.ball_position['x']
         # prev_y = self.network.ball_position['y']
@@ -129,18 +129,17 @@ class Game:
                         paddle = Paddle((255, 255, 255), 25, 75, playfield.sprites()[2],'paddle.png')   
                     else:
                         paddle = Paddle((255, 255, 255), 25, 75, playfield.sprites()[match_status[:i+1].count(3) - 1],'paddle.png')
-                    paddle.rect.x = x + playfield.margin_x
-                    paddle.rect.y = y + playfield.margin_y
+                    paddle.body.position = (x + playfield.margin_x, y + playfield.margin_y)
                     paddles.add(paddle)
 
             if self.network.player_match_status[self.network.connection_num] == 3:
                 keys = pygame.key.get_pressed()
                 if keys[pygame.K_UP] or keys[K_RIGHT] : 
                     mypaddle.move(True) 
-                    self.network.client.dispatch_event('paddleMove', position = (mypaddle.rect.x-playfield.margin_x, mypaddle.rect.y-playfield.margin_y))
+                    self.network.client.dispatch_event('paddleMove', position = (mypaddle.body.position[0]-playfield.margin_x, mypaddle.body.position[1]-playfield.margin_y))
                 elif keys[pygame.K_DOWN] or keys[K_LEFT]: 
                     mypaddle.move()
-                    self.network.client.dispatch_event('paddleMove', position = (mypaddle.rect.x-playfield.margin_x, mypaddle.rect.y-playfield.margin_y))
+                    self.network.client.dispatch_event('paddleMove', position = (mypaddle.body.position[0]-playfield.margin_x, mypaddle.body.position[1]-playfield.margin_y))
                 else: mypaddle.stop()
     
 
@@ -203,12 +202,10 @@ class Game:
         self.dispatch_network_event('paddle')
     
     def line_collision(self, arbiter, space, data):
-        print(data)
         self.dispatch_network_event('line')
         return True
 
     def dispatch_network_event(self, object):
-        print(object, 'hit')
         self.network.client.dispatch_event("ballCollision", object, self.network.connection_num, self.get_dict(self.ball.body.velocity), self.get_dict(self.ball.body.position - self.margin))
 
     def stop_message(self, velocity):
