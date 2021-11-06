@@ -36,6 +36,7 @@ class Paddle(pygame.sprite.Sprite):
     self.shape = pymunk.Segment(self.body, (0, -height/2), (0, height/2), width/2)
     self.body.angle = -radians(self.angle)
     self.shape.elasticity = 1
+    self.shape.collision_type = 1
 
   def move(self, reverse=False):
     # self.translate_to_middle(self.line.midpoint).get_distance(self.body.position) + self.height / 2 < self.line.length
@@ -64,8 +65,11 @@ class Paddle(pygame.sprite.Sprite):
     surf.blit(rotated_image, rotated_image_rect)
   
   def translate_to_middle(self, v):
+    SCREEN_WIDTH, SCREEN_HEIGHT = pygame.display.Info().current_w, pygame.display.Info().current_h
     n_hat = self.line.v_hat.perpendicular_normal()
-    if (v + (self.width/2+10)*n_hat).get_distance(Vec2d(400, 400)) < (v - (self.width/2+10)*n_hat).get_distance(Vec2d(400, 400)):
+    if (v + (self.width/2+10)*n_hat).get_distance(Vec2d(SCREEN_WIDTH/2, SCREEN_HEIGHT/2)) < (v - (self.width/2+10)*n_hat).get_distance(Vec2d(SCREEN_WIDTH/2, SCREEN_HEIGHT/2)):
       return v + self.width/2*n_hat
     else:
       return v - self.width/2*n_hat
+
+  

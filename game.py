@@ -11,6 +11,7 @@ from random import uniform
 from final_screen import Final_Screen
 import pymunk
 import pymunk.pygame_util
+from pymunk.vec2d import Vec2d
 from pygame.locals import (
   K_UP,
   K_DOWN,
@@ -32,7 +33,8 @@ class Game:
         self.screen = screen
         self.network = network
         self.network.client.register_event_handler("reinitGameloop", self.reinit_gameloop)
-        self.network.client.register_event_handler("stopMessage",self.stop_message)
+        self.network.client.register_event_handler("stopMessage", self.stop_message)
+        self.network.client.register_event_handler("collisionData", self.on_collision)
         self.message_on = True
         self.message = "Game Starting"
         while network.running and list(self.network.player_match_status.values()).count(3) > 1:
@@ -47,29 +49,27 @@ class Game:
         self.message = message
         self.message_on = True
 
+    def on_collision(self, ball_position, ball_velocity):
+        self.ball.body.velocity = (ball_velocity['x'], ball_velocity['y'])
+        self.ball.body.position = Vec2d(ball_position['x'], ball_position['y']) + self.margin
+
     def gameloop(self):
         SCREEN_WIDTH, SCREEN_HEIGHT = pygame.display.Info().current_w, pygame.display.Info().current_h
         self.network.player_num =list(self.network.player_match_status.values())[:list(self.network.player_match_status.keys()).index(self.network.connection_num)+1].count(3)
         self.running = self.network.running
         num_players = list(self.network.player_match_status.values()).count(3)
-        playfield = PlayField(color=WHITE, num_players=num_players)
         all_sprites_list = pygame.sprite.Group()
-        ball = Ball((255, 255, 255), 24, 24)
+        ball = Ball((255, 255, 255), 24, 24, self.network)
         all_sprites_list.add(ball)
         if self.network.player_match_status[self.network.connection_num]==3:
-            if(num_players == 2 and self.network.player_num == 2):
-                myboundary = playfield.sprites()[2]
-            else:
-                myboundary = playfield.sprites()[self.network.player_num - 1]
-            mypaddle = Paddle((255, 255, 255), paddle_width,paddle_height, myboundary,"my_paddle.png")
+            playfield = PlayField(color=WHITE, num_players=num_players, player_num=self.network.player_num)
+            mypaddle = Paddle((255, 255, 255), paddle_width,paddle_height, playfield.my_line, "my_paddle.png")
             self.network.client.dispatch_event('paddleMove', position = (mypaddle.rect.x-playfield.margin_x, mypaddle.rect.y-playfield.margin_y))
-            # all_sprites_list.add(mypaddle)
-        print('event dispatched')
         
-        # ball = Ball((255, 255, 255), 24, 24)
-        # all_sprites_list.add(ball)
-        prev_x = self.network.ball_position['x']
-        prev_y = self.network.ball_position['y']
+        # prev_x = self.network.ball_position['x']
+        # prev_y = self.network.ball_position['y']
+        self.ball = ball
+        self.margin = Vec2d(playfield.margin_x, playfield.margin_y)
         count, itr = 1, 1
         clock = pygame.time.Clock()  
         print(self.network.player_match_status)
@@ -79,14 +79,19 @@ class Game:
         background = pygame.image.load('background.png')
         background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
         
-        ball_vel_magnitude = 200
-        in_angle = uniform(0,2*pi)
         space = pymunk.Space()
         space.add(ball.body, ball.shape)
-        ball.body.velocity = (ball_vel_magnitude*cos(in_angle), ball_vel_magnitude*sin(in_angle))
+        
+        
         space.add(playfield.body, *playfield.shape)
         space.add(mypaddle.body, mypaddle.shape)
         
+        paddle_collision_handler = space.add_collision_handler(0, 1)
+        line_collision_handler = space.add_collision_handler(0, 2)
+        
+        paddle_collision_handler.post_solve = self.paddle_collision
+        line_collision_handler.post_solve = self.line_collision
+
         while self.running:
             self.screen.blit(background, (0, 0))
 
@@ -148,18 +153,18 @@ class Game:
                 #     self.network.client.dispatch_event("ballCollision", "paddle", self.network.connection_num, vel, self.network.ball_position)
 
             
-            x, y = self.network.ball_position['x'] + playfield.margin_x, self.network.ball_position['y'] + playfield.margin_y
-            if x != ball.rect.x: 
-                ball.rect.x += (x - ball.rect.x) / itr
-            if y != ball.rect.y: 
-                ball.rect.y += (y - ball.rect.y) / itr
+            # x, y = self.network.ball_position['x'] + playfield.margin_x, self.network.ball_position['y'] + playfield.margin_y
+            # if x != ball.rect.x: 
+            #     ball.rect.x += (x - ball.rect.x) / itr
+            # if y != ball.rect.y: 
+            #     ball.rect.y += (y - ball.rect.y) / itr
             
-            if prev_x == x and prev_y == y:
-                count += 1
-            else:
-                prev_x, prev_y = x, y
-                itr = (itr + count) / 2
-                count = 1
+            # if prev_x == x and prev_y == y:
+            #     count += 1
+            # else:
+            #     prev_x, prev_y = x, y
+            #     itr = (itr + count) / 2
+            #     count = 1
 
             server_status = self.network.client.connection.status - 1
             if server_status < 3: 
@@ -173,23 +178,39 @@ class Game:
                 message_surface = message_font.render(self.message,True,WHITE)
                 self.screen.blit(message_surface,(playfield.margin_x+200,playfield.margin_y+300))
             
-            space.step(1/60)
+            if not self.message_on: space.step(1/60)
             ball.rect.x, ball.rect.y = pymunk.pygame_util.to_pygame((ball.body.position.x-12, ball.body.position.y-12), ball.image)
-            mypaddle.blitRotate(self.screen)
 
             playfield.draw(self.screen)
             all_sprites_list.draw(self.screen) 
+            mypaddle.blitRotate(self.screen)
             for paddle in paddles.sprites(): paddle.blitRotate(self.screen)
             pygame.display.flip()
             clock.tick(60)
 
-    def get_new_velocity(self, ball_vel, line):
-        d = np.array(list(ball_vel.values()))
-        n = np.array([-(line.c1[1] - line.c2[1]), line.c1[0] - line.c2[0]])
-        n_hat = n / np.linalg.norm(n)
-        r = d - (2 * np.dot(d, n_hat)) * n_hat
+    # def get_new_velocity(self, ball_vel, line):
+    #     d = np.array(list(ball_vel.values()))
+    #     n = np.array([-(line.c1[1] - line.c2[1]), line.c1[0] - line.c2[0]])
+    #     n_hat = n / np.linalg.norm(n)
+    #     r = d - (2 * np.dot(d, n_hat)) * n_hat
 
-        return {"x": r[0], "y": r[1]}
-        
-    def stop_message(self):
+    #     return {"x": r[0], "y": r[1]}
+    
+    def get_dict(self, v):
+        return {'x': v[0], 'y': v[1]}
+
+    def paddle_collision(self, arbiter, space, data):
+        self.dispatch_network_event('paddle')
+    
+    def line_collision(self, arbiter, space, data):
+        print(data)
+        self.dispatch_network_event('line')
+        return True
+
+    def dispatch_network_event(self, object):
+        print(object, 'hit')
+        self.network.client.dispatch_event("ballCollision", object, self.network.connection_num, self.get_dict(self.ball.body.velocity), self.get_dict(self.ball.body.position - self.margin))
+
+    def stop_message(self, velocity):
+        self.ball.body.velocity = Vec2d(velocity['x'], velocity['y'])
         self.message_on = False
