@@ -14,6 +14,11 @@ from pygame.locals import (
 class Menu:
     def __init__(self, screen, network) -> None:
         SCREEN_WIDTH, SCREEN_HEIGHT = pygame.display.Info().current_w, pygame.display.Info().current_h
+        # pygame.mixer.music.load("./sounds/game_opener.ogg")
+        # pygame.mixer.music.play()
+        background_music = pygame.mixer.Sound("./sounds/bgm_20.ogg")
+        click_sound = pygame.mixer.Sound("./sounds/Blip_Select.ogg")
+        background_music.play(loops = -1)
         font = pygame.font.Font('font.ttf', 35) 
         font_big = pygame.font.Font('font.ttf', 64) 
         font_title = pygame.font.Font('font.ttf', 128) 
@@ -55,15 +60,18 @@ class Menu:
                     if button_x <= mouse[0] <= button_x + button_width:
                         if ready_y <= mouse[1] <= ready_y + button_height: 
                             print('ready')
+                            click_sound.play()
                             network.client.dispatch_event("playerReady", network.connection_num)
                         
                         if start_y <= mouse[1] <= start_y + button_height: 
                             print('start')
+                            click_sound.play()
                             if list(network.player_match_status.values()).count(2) > 1:
                                 network.client.dispatch_event("gameStart")
 
                         if quit_y <= mouse[1] <= quit_y + button_height: 
                             print('quit')
+                            click_sound.play()
                             network.menu_on = False
                             network.stop()
                             pygame.quit() 
