@@ -23,13 +23,17 @@ from pygame.locals import (
 
 paddle_width = 25
 paddle_height = 75
+network = None
+playfield_margin = None
 BLACK = (0,0,0)
 WHITE = (255,255,255)
 
 class Game:
-    def __init__(self, screen, network) -> None:
+    def __init__(self, screen, net) -> None:
+        global network
+        network = net
         self.screen = screen
-        self.network = network
+        self.network = net
         self.network.client.register_event_handler("reinitGameloop", self.reinit_gameloop)
         self.network.client.register_event_handler("stopMessage", self.stop_message)
         self.network.client.register_event_handler("collisionData", self.on_collision)
@@ -48,8 +52,10 @@ class Game:
         self.message_on = True
 
     def on_collision(self, ball_position, ball_velocity):
+        print("ball pos and vel:",ball_position,ball_velocity)
         self.ball.body.velocity = (ball_velocity['x'], ball_velocity['y'])
         self.ball.body.position = Vec2d(ball_position['x'], ball_position['y']) + self.margin
+        self.space.step(network.client.connection.latency/2)
 
     def gameloop(self):
         SCREEN_WIDTH, SCREEN_HEIGHT = pygame.display.Info().current_w, pygame.display.Info().current_h
@@ -78,17 +84,18 @@ class Game:
         background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
         
         space = pymunk.Space()
+        self.space = space
         space.add(ball.body, ball.shape)
-        
         
         space.add(playfield.body, *playfield.shape)
         space.add(mypaddle.body, mypaddle.shape)
         
         paddle_collision_handler = space.add_collision_handler(0, 1)
         line_collision_handler = space.add_collision_handler(0, 2)
-        
-        paddle_collision_handler.post_solve = self.paddle_collision
-        line_collision_handler.post_solve = self.line_collision
+        paddle_collision_handler.post_solve = paddle_collision
+        line_collision_handler.post_solve = line_collision
+        global playfield_margin
+        playfield_margin = self.margin
 
         while self.running:
             self.screen.blit(background, (0, 0))
@@ -178,7 +185,6 @@ class Game:
             if not self.message_on: space.step(1/60)
             # ball.rect.x, ball.rect.y = pymunk.pygame_util.to_pygame((ball.body.position.x-123/2, ball.body.position.y-119/2), ball.image)
             ball.blitRotate(self.screen)
-            print(ball.body.velocity.angle)
             playfield.draw(self.screen)
             all_sprites_list.draw(self.screen) 
             mypaddle.blitRotate(self.screen)
@@ -194,19 +200,28 @@ class Game:
 
     #     return {"x": r[0], "y": r[1]}
     
-    def get_dict(self, v):
-        return {'x': v[0], 'y': v[1]}
-
-    def paddle_collision(self, arbiter, space, data):
-        self.dispatch_network_event('paddle')
-    
-    def line_collision(self, arbiter, space, data):
-        self.dispatch_network_event('line')
-        return True
-
-    def dispatch_network_event(self, object):
-        self.network.client.dispatch_event("ballCollision", object, self.network.connection_num, self.get_dict(self.ball.body.velocity), self.get_dict(self.ball.body.position - self.margin))
-
     def stop_message(self, velocity):
         self.ball.body.velocity = Vec2d(velocity['x'], velocity['y'])
         self.message_on = False
+
+def limit_velocity(body, gravity, damping, dt):
+    max_velocity = 1000
+    pymunk.Body.update_velocity(body, gravity, damping, dt)
+    l = body.velocity.length
+    if l > max_velocity:
+        scale = max_velocity / l
+        body.velocity = body.velocity * scale
+
+def get_dict(v):
+    return {'x': v[0], 'y': v[1]}
+
+def paddle_collision(arbiter, space, data):
+    dispatch_network_event('paddle', space)
+    
+def line_collision(arbiter, space, data):
+    dispatch_network_event('line', space)
+
+def dispatch_network_event(object, space):
+    space_copy = space.copy()
+    space_copy.step(network.client.connection.latency/2)
+    network.client.dispatch_event("ballCollision", object, network.connection_num, get_dict(space_copy.bodies[0].velocity), get_dict(space_copy.bodies[0].position - playfield_margin))
