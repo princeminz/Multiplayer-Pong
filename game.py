@@ -1,7 +1,5 @@
 import pygame
 from time import sleep
-
-from pygame import display
 from playfield import PlayField
 from player import Paddle
 from ball import Ball
@@ -59,8 +57,8 @@ class Game:
         self.running = self.network.running
         num_players = list(self.network.player_match_status.values()).count(3)
         all_sprites_list = pygame.sprite.Group()
-        ball = Ball((255, 255, 255), 24, 24, self.network)
-        all_sprites_list.add(ball)
+        ball = Ball((255, 255, 255), 123, 119, self.network)
+        # all_sprites_list.add(ball)
         if self.network.player_match_status[self.network.connection_num]==3:
             playfield = PlayField(color=WHITE, num_players=num_players, player_num=self.network.player_num)
             mypaddle = Paddle((255, 255, 255), paddle_width,paddle_height, playfield.my_line, "my_paddle.png")
@@ -178,8 +176,9 @@ class Game:
                 self.screen.blit(message_surface,(playfield.margin_x+200,playfield.margin_y+300))
             
             if not self.message_on: space.step(1/60)
-            ball.rect.x, ball.rect.y = pymunk.pygame_util.to_pygame((ball.body.position.x-12, ball.body.position.y-12), ball.image)
-
+            # ball.rect.x, ball.rect.y = pymunk.pygame_util.to_pygame((ball.body.position.x-123/2, ball.body.position.y-119/2), ball.image)
+            ball.blitRotate(self.screen)
+            print(ball.body.velocity.angle)
             playfield.draw(self.screen)
             all_sprites_list.draw(self.screen) 
             mypaddle.blitRotate(self.screen)

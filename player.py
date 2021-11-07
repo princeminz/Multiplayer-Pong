@@ -35,9 +35,10 @@ class Paddle(pygame.sprite.Sprite):
     self.body.position = pymunk.pygame_util.from_pygame((x, y), self.image)
     self.shape = pymunk.Segment(self.body, (0, -height/2), (0, height/2), width/2)
     self.body.angle = -radians(self.angle)
+    self.shape.friction = 0
     self.shape.elasticity = 1
     self.shape.collision_type = 1
-    self.shape.density = 5
+    self.shape.density = 50
 
   def move(self, reverse=False):
     # self.translate_to_middle(self.line.midpoint).get_distance(self.body.position) + self.height / 2 < self.line.length
