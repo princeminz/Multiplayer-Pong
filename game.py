@@ -1,4 +1,5 @@
 import pygame
+from datetime import datetime
 from time import sleep
 from playfield import PlayField
 from player import Paddle
@@ -65,10 +66,15 @@ class Game:
         all_sprites_list = pygame.sprite.Group()
         ball = Ball((255, 255, 255), 123, 119, self.network)
         # all_sprites_list.add(ball)
+        space = pymunk.Space()
+        self.space = space
         if self.network.player_match_status[self.network.connection_num]==3:
             playfield = PlayField(color=WHITE, num_players=num_players, player_num=self.network.player_num)
             mypaddle = Paddle((255, 255, 255), paddle_width,paddle_height, playfield.my_line, "my_paddle.png")
+            space.add(mypaddle.body, mypaddle.shape)
             self.network.client.dispatch_event('paddleMove', position = (mypaddle.body.position[0]-playfield.margin_x, mypaddle.body.position[1]-playfield.margin_y))
+        else:
+            playfield = PlayField(color=WHITE, num_players=num_players)
         
         # prev_x = self.network.ball_position['x']
         # prev_y = self.network.ball_position['y']
@@ -83,12 +89,10 @@ class Game:
         background = pygame.image.load('background.png')
         background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
         
-        space = pymunk.Space()
-        self.space = space
+        
         space.add(ball.body, ball.shape)
         
         space.add(playfield.body, *playfield.shape)
-        space.add(mypaddle.body, mypaddle.shape)
         
         paddle_collision_handler = space.add_collision_handler(0, 1)
         line_collision_handler = space.add_collision_handler(0, 2)
@@ -97,6 +101,7 @@ class Game:
         global playfield_margin
         playfield_margin = self.margin
 
+        prev_time = datetime.now().timestamp()
         while self.running:
             self.screen.blit(background, (0, 0))
 
@@ -182,12 +187,14 @@ class Game:
                 message_surface = message_font.render(self.message,True,WHITE)
                 self.screen.blit(message_surface,(playfield.margin_x+200,playfield.margin_y+300))
             
-            if not self.message_on: space.step(1/60)
-            # ball.rect.x, ball.rect.y = pymunk.pygame_util.to_pygame((ball.body.position.x-123/2, ball.body.position.y-119/2), ball.image)
+            curr_time = datetime.now().timestamp()
+            if not self.message_on: space.step(curr_time-prev_time)
+            prev_time = curr_time
             ball.blitRotate(self.screen)
             playfield.draw(self.screen)
             all_sprites_list.draw(self.screen) 
-            mypaddle.blitRotate(self.screen)
+            if self.network.player_match_status[self.network.connection_num]==3:
+                mypaddle.blitRotate(self.screen)
             for paddle in paddles.sprites(): paddle.blitRotate(self.screen)
             pygame.display.flip()
             clock.tick(60)

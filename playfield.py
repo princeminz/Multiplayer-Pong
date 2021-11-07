@@ -9,7 +9,7 @@ paddle_height = 75
 
 
 class PlayField(pygame.sprite.Group):
-  def __init__(self, color, num_players, player_num):
+  def __init__(self, color, num_players, player_num = -1):
     super().__init__()
     coordinates = self.get_coordinates(num_players)
     self.body = pymunk.Body(body_type = pymunk.Body.STATIC)
@@ -19,7 +19,7 @@ class PlayField(pygame.sprite.Group):
     if(num_players == 2 and player_num == 2):
       self.shape[2].collision_type = 2
       self.my_line = self.sprites()[2]
-    else:
+    elif player_num != -1:
       self.shape[player_num - 1].collision_type = 2
       self.my_line = self.sprites()[player_num - 1]
   

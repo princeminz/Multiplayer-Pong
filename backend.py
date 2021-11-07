@@ -2,7 +2,6 @@ from pygase import GameState, Backend
 from datetime import datetime
 from math import sin,cos,pi,asin,acos
 from random import uniform
-from datetime import datetime
 #disconnected = 0
 #Connected = 1
 #ready = 2
