@@ -60,7 +60,8 @@ class Final_Screen:
             self.screen.blit(message_surface2,(500,800))
             pygame.display.flip()
             clock.tick(60)
-
+            
+        winning_sound.stop()
         print("out")
 
     def fireworks(self):

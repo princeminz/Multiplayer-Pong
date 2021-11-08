@@ -57,7 +57,8 @@ class Game:
         self.message_on = True
 
     def on_collision(self, ball_position, ball_velocity):
-        print("ball pos and vel:",ball_position,ball_velocity)
+        print(ball_position, ball_velocity)
+        paddle_hit_sound.play()
         self.ball.body.velocity = (ball_velocity['x'], ball_velocity['y'])
         self.ball.body.position = Vec2d(ball_position['x'], ball_position['y']) + self.margin
         self.space.step(network.client.connection.latency/2)
@@ -92,12 +93,15 @@ class Game:
         heart_size = heart_image.get_rect().size
         background = pygame.image.load('background.png')
         background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
-
-        paddle_movement_sound = pygame.mixer.Sound("./sounds/Blip_Select6.ogg")
-        life_lost_sound = pygame.mixer.Sound("./sounds/Hit_Hurt8.ogg")
-        paddle_hit_sound = pygame.mixer.Sound("./sounds/Powerup10.ogg")
-        
-        
+        global life_lost_sound, paddle_hit_sound
+        # paddle_movement_sound = pygame.mixer.Sound("./sounds/Blip_Select6.ogg")
+        life_lost_sound = pygame.mixer.Sound("sounds/life_lost.wav")
+        life_lost_sound.set_volume(0.1)
+        paddle_hit_sound = pygame.mixer.Sound("sounds/Powerup10.ogg")
+        paddle_hit_sound.set_volume(0.1)
+        background_music = pygame.mixer.Sound("sounds/slow-travel.wav")
+        background_music.set_volume(0.2)
+        background_music.play(loops = -1)
         space.add(ball.body, ball.shape)
         
         space.add(playfield.body, *playfield.shape)
@@ -154,11 +158,11 @@ class Game:
                 keys = pygame.key.get_pressed()
                 if keys[pygame.K_UP] or keys[K_RIGHT] : 
                     mypaddle.move(True) 
-                    paddle_movement_sound.play()
+                    # paddle_movement_sound.play()
                     self.network.client.dispatch_event('paddleMove', position = (mypaddle.body.position[0]-playfield.margin_x, mypaddle.body.position[1]-playfield.margin_y))
                 elif keys[pygame.K_DOWN] or keys[K_LEFT]: 
                     mypaddle.move()
-                    paddle_movement_sound.play()
+                    # paddle_movement_sound.play()
                     self.network.client.dispatch_event('paddleMove', position = (mypaddle.body.position[0]-playfield.margin_x, mypaddle.body.position[1]-playfield.margin_y))
                 else: mypaddle.stop()
     
@@ -208,6 +212,8 @@ class Game:
             for paddle in paddles.sprites(): paddle.blitRotate(self.screen)
             pygame.display.flip()
             clock.tick(60)
+            
+        background_music.stop()
 
     # def get_new_velocity(self, ball_vel, line):
     #     d = np.array(list(ball_vel.values()))
@@ -243,4 +249,4 @@ def line_collision(arbiter, space, data):
 def dispatch_network_event(object, space):
     space_copy = space.copy()
     space_copy.step(network.client.connection.latency/2)
-    network.client.dispatch_event("ballCollision", object, network.connection_num, get_dict(space_copy.bodies[0].velocity), get_dict(space_copy.bodies[0].position - playfield_margin))
+    network.client.dispatch_event("ballCollision", object, network.connection_num, get_dict(space_copy.bodies[1].velocity), get_dict(space_copy.bodies[1].position - playfield_margin))
