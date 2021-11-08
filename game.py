@@ -29,6 +29,10 @@ playfield_margin = None
 BLACK = (0,0,0)
 WHITE = (255,255,255)
 
+paddle_movement_sound = ''
+life_lost_sound = ''
+paddle_hit_sound = ''
+
 class Game:
     def __init__(self, screen, net) -> None:
         global network
@@ -88,6 +92,10 @@ class Game:
         heart_size = heart_image.get_rect().size
         background = pygame.image.load('background.png')
         background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
+        paddle_movement_sound = pygame.mixer.Sound("./sounds/Blip_Select6.ogg")
+        life_lost_sound = pygame.mixer.Sound("./sounds/Hit_Hurt8.ogg")
+        paddle_hit_sound = pygame.mixer.Sound("./sounds/Powerup10.ogg")
         
         
         space.add(ball.body, ball.shape)
@@ -146,9 +154,11 @@ class Game:
                 keys = pygame.key.get_pressed()
                 if keys[pygame.K_UP] or keys[K_RIGHT] : 
                     mypaddle.move(True) 
+                    paddle_movement_sound.play()
                     self.network.client.dispatch_event('paddleMove', position = (mypaddle.body.position[0]-playfield.margin_x, mypaddle.body.position[1]-playfield.margin_y))
                 elif keys[pygame.K_DOWN] or keys[K_LEFT]: 
                     mypaddle.move()
+                    paddle_movement_sound.play()
                     self.network.client.dispatch_event('paddleMove', position = (mypaddle.body.position[0]-playfield.margin_x, mypaddle.body.position[1]-playfield.margin_y))
                 else: mypaddle.stop()
     
@@ -223,9 +233,11 @@ def get_dict(v):
     return {'x': v[0], 'y': v[1]}
 
 def paddle_collision(arbiter, space, data):
+    paddle_hit_sound.play()
     dispatch_network_event('paddle', space)
     
 def line_collision(arbiter, space, data):
+    life_lost_sound.play()
     dispatch_network_event('line', space)
 
 def dispatch_network_event(object, space):
