@@ -23,6 +23,13 @@ class Final_Screen:
         background = pygame.image.load('background.png')
         background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.running = True
+        winning_sound = pygame.mixer.Sound("./sounds/Music_BG.ogg")
+        losing_sound = pygame.mixer.Sound("./sounds/bgm_27.ogg")
+
+        if self.message == "Winner":
+            winning_sound.play(loops = -1)
+        else:
+            losing_sound.play(loops = -1)
 
         self.particles = []
  
