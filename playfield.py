@@ -3,7 +3,7 @@ import pymunk
 import math
 from pymunk.vec2d import Vec2d
 BLACK = (0, 0, 0)
-SIDE_LENGTH = 800
+SIDE_LENGTH = 1000
 paddle_width = 25
 paddle_height = 75
 

@@ -97,7 +97,7 @@ class Game:
         # paddle_movement_sound = pygame.mixer.Sound("./sounds/Blip_Select6.ogg")
         life_lost_sound = pygame.mixer.Sound("sounds/life_lost.wav")
         life_lost_sound.set_volume(0.1)
-        paddle_hit_sound = pygame.mixer.Sound("sounds/Powerup10.ogg")
+        paddle_hit_sound = pygame.mixer.Sound("sounds/Powerup10.wav")
         paddle_hit_sound.set_volume(0.1)
         background_music = pygame.mixer.Sound("sounds/slow-travel.wav")
         background_music.set_volume(0.2)

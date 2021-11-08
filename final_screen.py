@@ -23,8 +23,8 @@ class Final_Screen:
         background = pygame.image.load('background.png')
         background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.running = True
-        winning_sound = pygame.mixer.Sound("./sounds/Music_BG.ogg")
-        losing_sound = pygame.mixer.Sound("./sounds/bgm_27.ogg")
+        winning_sound = pygame.mixer.Sound("./sounds/Music_BG.wav")
+        losing_sound = pygame.mixer.Sound("./sounds/bgm_27.wav")
 
         if self.message == "Winner":
             winning_sound.play(loops = -1)
@@ -62,6 +62,7 @@ class Final_Screen:
             clock.tick(60)
             
         winning_sound.stop()
+        losing_sound.stop()
         print("out")
 
     def fireworks(self):

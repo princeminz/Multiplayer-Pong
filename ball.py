@@ -39,8 +39,10 @@ class Ball(pygame.sprite.Sprite):
 
 def limit_velocity(body, gravity, damping, dt):
     max_velocity = 800
+    min_velocity = 300
     pymunk.Body.update_velocity(body, gravity, damping, dt)
     l = body.velocity.length
     if l > max_velocity:
-        scale = max_velocity / l
-        body.velocity = body.velocity * scale
+        body.velocity = body.velocity * max_velocity / l
+    elif l < min_velocity:
+        body.velocity = body.velocity * min_velocity / l
