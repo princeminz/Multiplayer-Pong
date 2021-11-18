@@ -42,6 +42,7 @@ class Game:
         self.network.client.register_event_handler("reinitGameloop", self.reinit_gameloop)
         self.network.client.register_event_handler("stopMessage", self.stop_message)
         self.network.client.register_event_handler("collisionData", self.on_collision)
+        self.network.client.register_event_handler("increaseSpeed",self.increase_speed)
         self.message_on = True
         self.message = "Game Starting"
         while network.running and list(self.network.player_match_status.values()).count(3) > 1:
@@ -167,28 +168,6 @@ class Game:
                 else: mypaddle.stop()
     
 
-                # Collision 
-                # if pygame.sprite.collide_mask(myboundary, ball):
-                #     self.network.client.dispatch_event("ballCollision", "line", self.network.connection_num, self.get_new_velocity(self.network.ball_velocity, myboundary), self.network.ball_position)
-
-                # if pygame.sprite.collide_mask(mypaddle,ball):
-                #     vel = self.get_new_velocity(self.network.ball_velocity, myboundary)
-                #     self.network.client.dispatch_event("ballCollision", "paddle", self.network.connection_num, vel, self.network.ball_position)
-
-            
-            # x, y = self.network.ball_position['x'] + playfield.margin_x, self.network.ball_position['y'] + playfield.margin_y
-            # if x != ball.rect.x: 
-            #     ball.rect.x += (x - ball.rect.x) / itr
-            # if y != ball.rect.y: 
-            #     ball.rect.y += (y - ball.rect.y) / itr
-            
-            # if prev_x == x and prev_y == y:
-            #     count += 1
-            # else:
-            #     prev_x, prev_y = x, y
-            #     itr = (itr + count) / 2
-            #     count = 1
-
             server_status = self.network.client.connection.status - 1
             if server_status < 3: 
                 server_status_text = font.render('Server ' + ['Disconnected', 'Connecting', 'Connected'][server_status], True, WHITE)
@@ -199,7 +178,7 @@ class Game:
             if self.message_on:
                 message_font = pygame.font.Font('font.ttf', 60) 
                 message_surface = message_font.render(self.message,True,WHITE)
-                self.screen.blit(message_surface,(playfield.margin_x+200,playfield.margin_y+300))
+                self.screen.blit(message_surface,(playfield.margin_x+300,playfield.margin_y+400))
             
             curr_time = datetime.now().timestamp()
             if not self.message_on: space.step(curr_time-prev_time)
@@ -227,6 +206,14 @@ class Game:
         self.ball.body.velocity = Vec2d(velocity['x'], velocity['y'])
         self.message_on = False
 
+    def increase_speed(self,factor_increase):
+        print("increased", self.ball.body.velocity)
+        self.ball.body.velocity = self.ball.body.velocity*factor_increase
+        print("increased", self.ball.body.velocity)
+        
+
+
+
 def limit_velocity(body, gravity, damping, dt):
     max_velocity = 1000
     pymunk.Body.update_velocity(body, gravity, damping, dt)
@@ -245,6 +232,7 @@ def paddle_collision(arbiter, space, data):
 def line_collision(arbiter, space, data):
     life_lost_sound.play()
     dispatch_network_event('line', space)
+
 
 def dispatch_network_event(object, space):
     space_copy = space.copy()
