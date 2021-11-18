@@ -73,6 +73,7 @@ class Game:
         ball = Ball((255, 255, 255), 123, 119, self.network)
         # all_sprites_list.add(ball)
         space = pymunk.Space()
+        space.iterations = 20
         self.space = space
         if self.network.player_match_status[self.network.connection_num]==3:
             playfield = PlayField(color=WHITE, num_players=num_players, player_num=self.network.player_num)

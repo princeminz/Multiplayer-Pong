@@ -27,7 +27,7 @@ class PlayField(pygame.sprite.Group):
     self.shape = [  pymunk.Segment(self.body, 
                     pymunk.pygame_util.from_pygame(line.c1, line.image), 
                     pymunk.pygame_util.from_pygame(line.c2, line.image), 
-                    1) for line in self.sprites() ]
+                    10) for line in self.sprites() ]
     for segment in self.shape: segment.elasticity = 1
 
   def get_coordinates(self, n):
@@ -50,8 +50,8 @@ class PlayField(pygame.sprite.Group):
       line = pygame.sprite.Sprite()
       surface_x = min(coordinate1[0], coordinate2[0]) 
       surface_y = min(coordinate1[1], coordinate2[1])
-      line.image = pygame.Surface([abs(coordinate1[0] - coordinate2[0])+5, abs(coordinate1[1] - coordinate2[1])+5], pygame.SRCALPHA)
-      pygame.draw.line(line.image, color, (coordinate1[0]-surface_x, coordinate1[1]-surface_y), (coordinate2[0]-surface_x, coordinate2[1]-surface_y),5)
+      line.image = pygame.Surface([abs(coordinate1[0] - coordinate2[0])+10, abs(coordinate1[1] - coordinate2[1])+10], pygame.SRCALPHA)
+      pygame.draw.line(line.image, color, (coordinate1[0]-surface_x, coordinate1[1]-surface_y), (coordinate2[0]-surface_x, coordinate2[1]-surface_y),10)
       line.rect = line.image.get_rect()
       line.rect.x = surface_x
       line.rect.y = surface_y
